@@ -1,0 +1,4 @@
+﻿node_modules/
+deployment/*
+!deployment/db/serverless.yml
+!deployment/serverless.yml
