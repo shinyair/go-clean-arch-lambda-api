@@ -80,6 +80,19 @@ project
 Run cmd `go mod tidy` to install all required packages.
 
 ## Test in local
+### Check env.yml
+
+**`Required`**
+- change the `VARIANT`. `VARIANT` helps deploy your own aws services online for each stage. For example, name of official lambda of `dev` stage begins as `dev--{appcode}-`, while the name of your personal lambda of `dev` stage begins as `dev-{variant}-{appcode}-`.
+- input the `ACCOUNT_ID`. ID of AWS Account you are using.
+- change the `AWS_PROFILE` if you have a specific profile. remove it if you do not have the specific profile.
+
+**`Optional`**
+- change the `APPCODE` as you want.
+- change the `REGION` and `AWS_REGION` to the one you want deploy resources to. 
+- change the `AWS_DEPLOYMENT_BUCKET` as you want.
+- change the `DUMMY_TABLE_NAME` in format `{stage}-{appcode}-dummy`.
+
 ### Before testing
 When debuging from local without localstack, aws services should be prepared in advance except API Gateway & Lambda, such as DynamoDB, so we need to deploy DynamoDB by Serverless Framework before testing.
 [Reason to create dynamodb tables as a service](https://stackoverflow.com/questions/41620437/how-to-continue-deploy-if-dynamodb-table-already-exists)
