@@ -1,4 +1,6 @@
-﻿node_modules/
-deployment/*
-!deployment/db/serverless.yml
-!deployment/serverless.yml
+﻿.vscode/
+node_modules/
+!deployment/
+deployment/**
+!deployment/db/
+!deployment/**/serverless.yml
