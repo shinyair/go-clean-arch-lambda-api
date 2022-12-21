@@ -31,12 +31,27 @@ provider:
   environment: ${file(./output/configs/env.yml):${self:custom.stage}}
 
 package:
-  artifact: output.zip
+  individually: true
 
 functions:
+  api:
+    name: ${self:custom.stage}-${self:custom.variant}-${self:service}-api
+    handler: main
+    package: 
+      artifact: api.zip
+    events:
+      - httpApi:
+          method: "*"
+          path: /v1/{proxy+}
+    reservedConcurrency: 1 # test only
+    tags:
+      stage: ${self:custom.stage}
+      appcode: ${self:custom.appCode}
   dummy:
     name: ${self:custom.stage}-${self:custom.variant}-${self:service}-dummy
-    handler: bin/main
+    handler: main
+    package: 
+      artifact: dummy.zip
     events:
       - httpApi:
           method: "*"

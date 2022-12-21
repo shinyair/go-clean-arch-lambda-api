@@ -33,7 +33,7 @@ func setLocalEnv() {
 func server() {
 	setLocalEnv()
 	port := 8080
-	controllers, err := app.InitDummyControllers()
+	controllers, err := app.InitControllers()
 	if err != nil {
 		logger.Error("execution end. failed to init lambda.", err)
 		return
