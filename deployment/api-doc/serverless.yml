@@ -1,0 +1,32 @@
+service: go-clean-lambda-apidoc
+
+frameworkVersion: ">=3.0"
+
+plugins:
+  - ./../plugins/s3-upload-plugin.js
+
+custom:
+  stage: ${opt:stage,'dev'}
+  external: ${file(./../output/configs/env.yml):${self:custom.stage}}
+  appCode: ${self:custom.external.APPCODE}
+  variant: ${self:custom.external.VARIANT, ''}
+  s3upload:
+      bucket:
+        name: ${self:custom.stage}-${self:custom.variant}-${self:service}
+        websiteCfgs:
+          index: "index.html"
+          error: "error.html"
+      resources:
+        - name: "swagger-spec"
+          source: "dist/openapi"
+          dest: "openapi"
+        - name: "swagger-ui"
+          source: "dist/swagger-ui"
+          dest: "swagger-ui"
+          versionFileName: "version"
+
+provider:
+  name: aws
+  stage: ${self:custom.stage}${self:custom.variant}
+  runtime: go1.x
+  region: ${self:custom.external.REGION}

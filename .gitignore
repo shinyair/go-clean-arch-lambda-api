@@ -3,7 +3,11 @@ node_modules/
 !deployment/
 deployment/**
 !deployment/db/
+!deployment/api-doc/
 !deployment/**/serverless.yml
+
+!deployment/plugins/
+!deployment/plugins/**
 
 # DynamoDB-local Integration Test
 test/dynamodb-local/docker
