@@ -1,0 +1,45 @@
+service: go-clean-lambda-db
+
+frameworkVersion: ">=3.0"
+
+plugins:
+  - serverless-deployment-bucket
+
+custom:
+  stage: ${opt:stage,'dev'}
+  external: ${file(./../output/configs/env.yml):${self:custom.stage}}
+  region: ${self:custom.external.REGION}
+  appCode: ${self:custom.external.APPCODE}
+  variant: ${self:custom.external.VARIANT, ''}
+
+provider:
+  name: aws
+  stage: ${self:custom.stage}${self:custom.variant}
+  region: ${self:custom.region}
+  deploymentBucket: 
+    name: ${self:custom.external.AWS_DEPLOYMENT_BUCKET}
+  stackName: ${self:custom.stage}-${self:custom.variant}-${self:service}
+
+resources:
+  Resources:
+     DummyTable:
+      Type: AWS::DynamoDB::Table
+      DeletionPolicy: Retain
+      Properties:
+        TableName: ${self:custom.external.DUMMY_TABLE_NAME} # {stage}.{appcode}.dummy
+        Tags:
+          - Key: appcode
+            Value: ${self:custom.appCode}
+          - Key: stage
+            Value: ${self:custom.stage}
+        AttributeDefinitions:
+          - AttributeName: pk
+            AttributeType: S
+          - AttributeName: sk
+            AttributeType: S
+        KeySchema:
+          - AttributeName: pk
+            KeyType: HASH
+          - AttributeName: sk
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST

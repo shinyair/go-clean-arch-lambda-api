@@ -4,8 +4,18 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "prebuild": "rm -rf deployment/output/* && copyfiles --flat configs/* deployment/output/configs",
+    "build": "set GOARCH=amd64&& set GOOS=linux&& go build -o deployment/output/bin/main cmd/main.go",
+    "package": "cd deployment && rm -rf output.zip && 7z a -tzip output.zip ./output/bin/",
+    "deploy": "cd deployment && sls deploy --force",
+    "undeploy": "cd deployment && sls remove",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "copyfiles": "^2.4.1",
+    "rimraf": "^3.0.2",
+    "serverless-deployment-bucket": "^1.6.0"
+  }
 }
