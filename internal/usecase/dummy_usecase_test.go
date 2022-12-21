@@ -2,6 +2,8 @@ package usecase_test
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/google/uuid"
@@ -10,7 +12,38 @@ import (
 	"local.com/go-clean-lambda/internal/usecase"
 )
 
-func TestDummyGetWithIdReturnBo(t *testing.T) {
+const (
+	invalidDummyID string = "invalid_dummy_id"
+)
+
+var errBadRepositoryAction error = errors.New("mocked repo error")
+
+func TestDummyGetWithBadRepoReturnError(t *testing.T) {
+	items := []*domain.Dummy{}
+	repo := NewDummyMockRepository(items)
+	u := usecase.NewDummyUseCase(repo)
+
+	bo, err := u.Get(context.TODO(), invalidDummyID)
+	msg := "get with bad repo didn't fail"
+	assertions := assert.New(t)
+	assertions.NotNil(err, msg, "error not found")
+	assertions.Nil(bo, msg, "returned bo")
+}
+
+func TestDummyGetWithEmptyIDReturnError(t *testing.T) {
+	items := []*domain.Dummy{}
+	repo := NewDummyMockRepository(items)
+	u := usecase.NewDummyUseCase(repo)
+
+	bo, err := u.Get(context.TODO(), "")
+	msg := "get with empty id didn't fail"
+	assertions := assert.New(t)
+	assertions.NotNil(err, msg, "error not found")
+	assertions.True(errors.Is(err, usecase.ErrInvalidInput), msg, "error type")
+	assertions.Nil(bo, msg, "returned bo")
+}
+
+func TestDummyGetWithIDReturnBo(t *testing.T) {
 	item := &domain.Dummy{
 		ID:       uuid.New().String(),
 		Name:     "test_name",
@@ -34,7 +67,7 @@ type DummyMockRepository struct {
 	dmap map[string]*domain.Dummy
 }
 
-func NewDummyMockRepository(entities []*domain.Dummy) domain.DummyRepository {
+func NewDummyMockRepository(entities []*domain.Dummy) *DummyMockRepository {
 	dmap := make(map[string]*domain.Dummy)
 	for _, entity := range entities {
 		dmap[entity.ID] = entity
@@ -44,9 +77,12 @@ func NewDummyMockRepository(entities []*domain.Dummy) domain.DummyRepository {
 	}
 }
 
-func (r *DummyMockRepository) GetById(ctx context.Context, id string) (*domain.Dummy, error) {
+func (r *DummyMockRepository) GetByID(ctx context.Context, id string) (*domain.Dummy, error) {
 	if id == "" {
 		return nil, nil
+	}
+	if id == invalidDummyID {
+		return nil, fmt.Errorf("%w: %s", errBadRepositoryAction, "GetByID")
 	}
 	return r.dmap[id], nil
 }
@@ -55,13 +91,19 @@ func (r *DummyMockRepository) Insert(ctx context.Context, dummy *domain.Dummy) (
 	if dummy == nil || dummy.ID == "" {
 		return nil, nil
 	}
+	if dummy.ID == invalidDummyID {
+		return nil, fmt.Errorf("%w: %s", errBadRepositoryAction, "Insert")
+	}
 	r.dmap[dummy.ID] = dummy
 	return dummy, nil
 }
 
-func (r *DummyMockRepository) DeleteById(ctx context.Context, id string) (*domain.Dummy, error) {
+func (r *DummyMockRepository) DeleteByID(ctx context.Context, id string) (*domain.Dummy, error) {
 	if id == "" {
 		return nil, nil
+	}
+	if id == invalidDummyID {
+		return nil, fmt.Errorf("%w: %s", errBadRepositoryAction, "DeleteByID")
 	}
 	dummy := r.dmap[id]
 	delete(r.dmap, id)

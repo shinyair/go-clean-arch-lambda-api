@@ -2,7 +2,9 @@ package domain
 
 import "context"
 
-// Dummy
+// Dummy.
+//
+//nolint:tagliatelle
 type Dummy struct {
 	ID       string `json:"id"`
 	Name     string `json:"name"`
@@ -10,17 +12,18 @@ type Dummy struct {
 }
 
 // ToKeyDummy
-//  @param id
-//  @return *Dummy
+//
+//	@param id
+//	@return *Dummy
 func ToKeyDummy(id string) *Dummy {
 	return &Dummy{
 		ID: id,
 	}
 }
 
-// DummyRepository
+// DummyRepository.
 type DummyRepository interface {
-	GetById(ctx context.Context, id string) (*Dummy, error)
+	GetByID(ctx context.Context, id string) (*Dummy, error)
 	Insert(ctx context.Context, dummy *Dummy) (*Dummy, error)
-	DeleteById(ctx context.Context, id string) (*Dummy, error)
+	DeleteByID(ctx context.Context, id string) (*Dummy, error)
 }

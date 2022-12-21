@@ -3,20 +3,20 @@ package app
 import (
 	"fmt"
 
+	aws "github.com/aws/aws-sdk-go/aws"
+	awssession "github.com/aws/aws-sdk-go/aws/session"
+	awsdynamodb "github.com/aws/aws-sdk-go/service/dynamodb"
 	"local.com/go-clean-lambda/internal/controller"
 	bizcontroller "local.com/go-clean-lambda/internal/controller/biz"
 	"local.com/go-clean-lambda/internal/logger"
 	dynamodbrepo "local.com/go-clean-lambda/internal/repository/dynamodb"
 	"local.com/go-clean-lambda/internal/usecase"
-
-	aws "github.com/aws/aws-sdk-go/aws"
-	awssession "github.com/aws/aws-sdk-go/aws/session"
-	awsdynamodb "github.com/aws/aws-sdk-go/service/dynamodb"
 )
 
 // InitControllers
-//  @return []muxcontroller.MuxController
-//  @return error
+//
+//	@return []muxcontroller.MuxController
+//	@return error
 func InitDummyControllers() ([]controller.MuxController, error) {
 	// init configs
 	appConfig, err := NewAppConfig()

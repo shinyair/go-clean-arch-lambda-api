@@ -1,12 +1,11 @@
 package main
 
 import (
+	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/awslabs/aws-lambda-go-api-proxy/gorillamux"
 	"local.com/go-clean-lambda/internal/app"
 	"local.com/go-clean-lambda/internal/controller"
 	"local.com/go-clean-lambda/internal/logger"
-
-	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/awslabs/aws-lambda-go-api-proxy/gorillamux"
 )
 
 func main() {

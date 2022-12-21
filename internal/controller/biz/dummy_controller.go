@@ -1,17 +1,19 @@
 package bizcontroller
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
+	"github.com/gorilla/mux"
 	"local.com/go-clean-lambda/internal/controller"
 	"local.com/go-clean-lambda/internal/logger"
 	"local.com/go-clean-lambda/internal/usecase"
-
-	"github.com/gorilla/mux"
 )
 
-// DummyController
+var ErrObjectNotFound error = errors.New("object not found")
+
+// DummyController implements interface controller.MuxController.
 type DummyController struct {
 	rootPath   string
 	handlerMap map[string]map[string]*controller.MuxRouterHandler
@@ -19,24 +21,27 @@ type DummyController struct {
 }
 
 // GetRootPath
-//  @receiver c
-//  @return string
+//
+//	@receiver c
+//	@return string
 func (c *DummyController) GetRootPath() string {
 	return c.rootPath
 }
 
 // GetHandlers
-//  @receiver c
-//  @return map
+//
+//	@receiver c
+//	@return map
 func (c *DummyController) GetHandlers() map[string]map[string]*controller.MuxRouterHandler {
 	return c.handlerMap
 }
 
 // NewDummyController
-//  @param logMdf
-//  @param usecase
-//  @return controller.MuxController
-func NewDummyController(logMdf mux.MiddlewareFunc, usecase *usecase.DummyUseCase) controller.MuxController {
+//
+//	@param logMdf
+//	@param usecase
+//	@return controller.MuxController
+func NewDummyController(logMdf mux.MiddlewareFunc, usecase *usecase.DummyUseCase) *DummyController {
 	c := &DummyController{
 		rootPath:   "/api/dummy",
 		handlerMap: make(map[string]map[string]*controller.MuxRouterHandler),
@@ -69,28 +74,30 @@ func NewDummyController(logMdf mux.MiddlewareFunc, usecase *usecase.DummyUseCase
 }
 
 // handleGet
-//  @receiver c
-//  @param w
-//  @param r
-//  @param id
-//  @return error
+//
+//	@receiver c
+//	@param w
+//	@param r
+//	@param id
+//	@return error
 func (c *DummyController) handleGet(w http.ResponseWriter, r *http.Request, id string) error {
 	logger.Debug("get by id: %s", id)
 	bo, err := c.usecase.Get(r.Context(), id)
 	if err != nil {
-		return err
+		return fmt.Errorf("get item error. %w", err)
 	}
 	s := fmt.Sprintf("handle get. id: %s, got bo: %s", id, logger.Pretty(bo))
 	logger.Info(s)
-	w.Write([]byte(s))
-	return nil
+	_, err = w.Write([]byte(s))
+	return fmt.Errorf("write response failed. %w", err)
 }
 
 // handlePost
-//  @receiver c
-//  @param w
-//  @param r
-//  @return error
+//
+//	@receiver c
+//	@param w
+//	@param r
+//	@return error
 func (c *DummyController) handlePost(w http.ResponseWriter, r *http.Request) error {
 	id := r.URL.Query().Get("id")
 	name := r.URL.Query().Get("name")
@@ -102,31 +109,32 @@ func (c *DummyController) handlePost(w http.ResponseWriter, r *http.Request) err
 		Attr: attr,
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("add item error. %w", err)
 	}
 	s := logger.Pretty(bo)
 	logger.Debug("handle add. bo: %s", s)
-	w.Write([]byte(s))
-	return nil
+	_, err = w.Write([]byte(s))
+	return fmt.Errorf("write response failed. %w", err)
 }
 
 // handleDelete
-//  @receiver c
-//  @param w
-//  @param r
-//  @param id
-//  @return error
+//
+//	@receiver c
+//	@param w
+//	@param r
+//	@param id
+//	@return error
 func (c *DummyController) handleDelete(w http.ResponseWriter, r *http.Request, id string) error {
 	logger.Debug("delete by id: %s", id)
 	bo, err := c.usecase.Remove(r.Context(), id)
 	if err != nil {
-		return err
+		return fmt.Errorf("remove item error. %w", err)
 	}
 	if bo == nil {
-		return fmt.Errorf("failed to handle delete. id: %s", id)
+		return fmt.Errorf("%w. id: %s", ErrObjectNotFound, id)
 	}
 	s := fmt.Sprintf("handle delete. id: %s", id)
 	logger.Debug(s)
-	w.Write([]byte(s))
-	return nil
+	_, err = w.Write([]byte(s))
+	return fmt.Errorf("write response failed. %w", err)
 }

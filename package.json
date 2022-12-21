@@ -9,7 +9,8 @@
     "package": "cd deployment && rm -rf output.zip && 7z a -tzip output.zip ./output/bin/",
     "deploy": "cd deployment && sls deploy --force",
     "undeploy": "cd deployment && sls remove",
-    "test": "go test ./... -tags integration"
+    "test": "go test ./... -tags integration",
+    "lint": "golangci-lint run"
   },
   "author": "",
   "license": "ISC",

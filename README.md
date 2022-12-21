@@ -32,6 +32,12 @@ Docker Desktop provides many docker images help running code in required env, wh
 In this project, a docker image is used for running dynnamodb-local for dynamodb integration test.
 [Docker Desktop](https://www.docker.com/)
 
+#### golangci-lint
+`golangci-lint` is a fast Go linters runner. It runs linters in parallel, uses caching, supports yaml config, has integrations with all major IDE and has dozens of linters included.
+`golangci-lint` version: 1.48.0
+[golangci-lint GitHub](https://github.com/golangci/golangci-lint)
+[golangci-lint Guide](https://freshman.tech/linting-golang)
+
 #### 7z(for windows only)
 Windows desn't support zip files by cmd natively, so use 7z cmd line to support package zip for deployment by scripts.
 [Download 7z](https://www.7-zip.org/download.html)
@@ -78,6 +84,7 @@ project
 ├── scripts # helper scripts
 ├── test # test configs
 ├── .gitignore
+├── .golangci.yml # lint configurations
 ├── go.mod
 ├── go.sum
 ├── package.json
@@ -86,6 +93,9 @@ project
 ```
 ## Build the existing project
 Run cmd `go mod tidy` to install all required packages.
+
+## Lint
+Run cmd `golangci-lint run` to format files and found potential problems.
 
 ## Test in local
 ### Check env.yml
@@ -138,9 +148,11 @@ When debuging from local without localstack, aws services should be prepared in 
   "scripts": {
     "prebuild": "rm -rf deployment/output/* && copyfiles --flat configs/* deployment/output/configs",
     "build": "set GOARCH=amd64&& set GOOS=linux&& go build -o deployment/output/bin/main cmd/main.go",
-    "test": "go test ./... -tags integration"
+    "test": "go test ./... -tags integration",
+    "lint": "golangci-lint run"
   },
   ```
+  - run cmd `npm run lint`
   - run cmd `npm run test`
   - run cmd `npm run build`
   - run cmd `npm run package`
@@ -218,6 +230,9 @@ project
 ### The Clean Code Blog
 [The Clean Code Blog](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
 <img src="https://blog.cleancoder.com/uncle-bob/images/2012-08-13-the-clean-architecture/CleanArchitecture.jpg">
+
+### Go linters
+[golangci-lint](https://golangci-lint.run/) is a Go linters aggregator, which contains a lot of popular linters.
 
 ### Test in Golang
 #### Naming conventions

@@ -1,0 +1,41 @@
+# https://golangci-lint.run/usage/linters/
+run:
+  tests: true
+
+linters-settings:
+  govet:
+    check-shadowing: true
+  gocyclo:
+    min-complexity: 10
+  dupl:
+    threshold: 100
+  goconst:
+    min-len: 2
+    min-occurrences: 2
+  paralleltest:
+    ignore-missing: true
+
+linters:
+  enable-all: true
+  disable:
+    - deadcode
+    - exhaustivestruct
+    - golint
+    - ifshort
+    - interfacer
+    - maligned
+    - nosnakecase
+    - scopelint
+    - structcheck
+    - varcheck
+    - varnamelen
+    - godox
+    - wsl
+    - nlreturn
+    - nilnil
+    - exhaustruct
+    - execinquery
+    - sqlclosecheck
+
+issues:
+  fix: true

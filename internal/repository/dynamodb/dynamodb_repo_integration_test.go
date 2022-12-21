@@ -128,12 +128,15 @@ func createDdbTables(client *dynamodb.DynamoDB) error {
 func saveDdbItems[T domain.Dummy](
 	tableName string,
 	entities []*T,
-	toDbItemFunc func(item *T) map[string]*dynamodb.AttributeValue,
+	toDBItemFunc func(item *T) (map[string]*dynamodb.AttributeValue, error),
 ) error {
 	writeReqs := []*dynamodb.WriteRequest{}
 	writeInputs := []*dynamodb.BatchWriteItemInput{}
 	for _, entity := range entities {
-		dav := toDbItemFunc(entity)
+		dav, err := toDBItemFunc(entity)
+		if err != nil {
+			return err
+		}
 		putreq := &dynamodb.WriteRequest{
 			PutRequest: &dynamodb.PutRequest{
 				Item: dav,
@@ -172,7 +175,7 @@ func saveDdbItems[T domain.Dummy](
 func loadDdbItems[T domain.Dummy](
 	tableName string,
 	keys []*T,
-	toDbKeyFunc func(item *T) map[string]*dynamodb.AttributeValue,
+	toDBKeyFunc func(item *T) map[string]*dynamodb.AttributeValue,
 	toEntityFunc func(dav map[string]*dynamodb.AttributeValue) (*T, error),
 ) ([]*T, error) {
 	if len(keys) == 0 {
@@ -181,7 +184,7 @@ func loadDdbItems[T domain.Dummy](
 	batchGetInputs := []*dynamodb.BatchGetItemInput{}
 	ddbKeys := []map[string]*dynamodb.AttributeValue{}
 	for _, key := range keys {
-		ddbKeys = append(ddbKeys, toDbKeyFunc(key))
+		ddbKeys = append(ddbKeys, toDBKeyFunc(key))
 		if len(ddbKeys) >= 100 {
 			batchGetInputs = append(batchGetInputs, &dynamodb.BatchGetItemInput{
 				RequestItems: map[string]*dynamodb.KeysAndAttributes{

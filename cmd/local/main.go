@@ -6,11 +6,10 @@ import (
 	"net/http"
 	"os"
 
-	"local.com/go-clean-lambda/internal/app"
-	"local.com/go-clean-lambda/internal/logger"
-
 	"gopkg.in/yaml.v2"
+	"local.com/go-clean-lambda/internal/app"
 	"local.com/go-clean-lambda/internal/controller"
+	"local.com/go-clean-lambda/internal/logger"
 )
 
 func setLocalEnv() {

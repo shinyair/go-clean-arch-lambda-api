@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-type AppConfig struct {
+type Config struct {
 	Appcode     string
 	Variant     string
 	Stage       string
@@ -21,7 +21,7 @@ type LogConfig struct {
 }
 
 type AwsEnvConfig struct {
-	AccountId string
+	AccountID string
 	Region    string
 	Profile   string
 }
@@ -30,9 +30,9 @@ type DynamodbConfig struct {
 	DummyTableName string
 }
 
-func NewAppConfig() (*AppConfig, error) {
+func NewAppConfig() (*Config, error) {
 	awsEnvConfig := &AwsEnvConfig{
-		AccountId: os.Getenv("ACCOUNT_ID"),
+		AccountID: os.Getenv("ACCOUNT_ID"),
 		Region:    os.Getenv("AWS_REGION"),
 		Profile:   os.Getenv("AWS_PROFILE"),
 	}
@@ -44,7 +44,7 @@ func NewAppConfig() (*AppConfig, error) {
 	dynamodbConfig := &DynamodbConfig{
 		DummyTableName: os.Getenv("DUMMY_TABLE_NAME"),
 	}
-	appConfig := AppConfig{
+	appConfig := Config{
 		Appcode:     os.Getenv("APPCODE"),
 		Variant:     os.Getenv("VARIANT"),
 		Stage:       os.Getenv("STAGE"),

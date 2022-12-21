@@ -3,13 +3,13 @@ package controller
 import (
 	"net/http"
 
-	"local.com/go-clean-lambda/internal/logger"
-
 	"github.com/gorilla/mux"
+	"local.com/go-clean-lambda/internal/logger"
 )
 
 // GetLogMiddleware
-//  @return mux.MiddlewareFunc
+//
+//	@return mux.MiddlewareFunc
 func GetLogMiddleware() mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -20,9 +20,10 @@ func GetLogMiddleware() mux.MiddlewareFunc {
 }
 
 // NotMatched
-//  @param w
-//  @param r
-//  @return bool is handled
+//
+//	@param w
+//	@param r
+//	@return bool is handled
 func NotMatched(w http.ResponseWriter, r *http.Request) bool {
 	if r.Method != http.MethodOptions {
 		logger.Info("handle unmatched request. path: %s, method: %s", r.URL.Path, r.Method)
@@ -34,10 +35,11 @@ func NotMatched(w http.ResponseWriter, r *http.Request) bool {
 }
 
 // writeCors
-//  @param w
+//
+//	@param w
 func writeCors(w http.ResponseWriter) {
 	w.Header().Add("Access-Control-Allow-Headers", "*")
 	w.Header().Add("Access-Control-Allow-Origin", "*")
 	w.Header().Add("Access-Control-Allow-Credentials", "true")
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusOK)
 }

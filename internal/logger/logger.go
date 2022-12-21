@@ -12,16 +12,24 @@ import (
 	"github.com/hashicorp/logutils"
 )
 
+const (
+	unknownFileName       string = "unknow file"
+	logFilenameSkipFrames int    = 2
+)
+
 // Newline
 // helps control newline character
 // use '\r' for lambda
-// use '\n' for local debug
+// use '\n' for local debug.
+//
+//nolint:gochecknoglobals
 var useCr bool
 
 // SetLogLevels
-//  @param logLevels
-//  @param minLevel
-//  @param crNewline
+//
+//	@param logLevels
+//	@param minLevel
+//	@param crNewline
 func SetLogLevels(logLevels []string, minLevel string, crNewline bool) {
 	levels := []logutils.LogLevel{}
 	for _, l := range logLevels {
@@ -37,8 +45,9 @@ func SetLogLevels(logLevels []string, minLevel string, crNewline bool) {
 }
 
 // Debug
-//  @param format
-//  @param v
+//
+//	@param format
+//	@param v
 func Debug(format string, v ...any) {
 	f := getLogFile()
 	s := fmt.Sprintf(format, v...)
@@ -48,8 +57,9 @@ func Debug(format string, v ...any) {
 }
 
 // Info
-//  @param format
-//  @param v
+//
+//	@param format
+//	@param v
 func Info(format string, v ...any) {
 	f := getLogFile()
 	s := fmt.Sprintf(format, v...)
@@ -59,8 +69,9 @@ func Info(format string, v ...any) {
 }
 
 // Warn
-//  @param format
-//  @param v
+//
+//	@param format
+//	@param v
 func Warn(format string, v ...any) {
 	f := getLogFile()
 	s := fmt.Sprintf(format, v...)
@@ -70,9 +81,10 @@ func Warn(format string, v ...any) {
 }
 
 // Error
-//  @param format
-//  @param err
-//  @param v
+//
+//	@param format
+//	@param err
+//	@param v
 func Error(format string, err error, v ...any) {
 	f := getLogFile()
 	s := fmt.Sprintf(format, v...)
@@ -83,31 +95,40 @@ func Error(format string, err error, v ...any) {
 }
 
 // Pretty
-//  @param v any object
-//  @return string json string
+//
+//	@param v any object
+//	@return string json string
 func Pretty(v interface{}) string {
-	vjson, _ := json.MarshalIndent(v, "", "  ")
+	if v == nil {
+		return "{nil}"
+	}
+	vjson, err := json.MarshalIndent(v, "", "  ")
+	if err != nil {
+		return "pretty_error"
+	}
 	return string(vjson)
 }
 
 // getLogFile
-//  @return string
+//
+//	@return string
 func getLogFile() string {
-	_, file, line, ok := runtime.Caller(2)
+	_, file, line, ok := runtime.Caller(logFilenameSkipFrames)
 	if !ok {
-		return "unknow file"
+		return unknownFileName
 	}
 	index := strings.LastIndex(file, "/")
 	if index >= 0 && index+1 < len(file) {
 		sf := file[index+1:]
 		return sf + "#" + strconv.Itoa(line)
 	}
-	return "unknow file"
+	return unknownFileName
 }
 
 // newline change newline characters
-//  @param text
-//  @return string
+//
+//	@param text
+//	@return string
 func newline(text string) string {
 	if !useCr {
 		return text

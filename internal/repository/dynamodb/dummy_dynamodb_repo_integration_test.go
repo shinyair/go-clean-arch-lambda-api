@@ -48,19 +48,19 @@ func buildCreateDummyTableInput() *dynamodb.CreateTableInput {
 	}
 }
 
-func TestDummyGetByIdWithBadRepoReturnError(t *testing.T) {
+func TestDummyGetByIDWithBadRepoReturnError(t *testing.T) {
 	assert := require.New(t)
 	repo := dynamodbrepo.NewDummyDynamodbRepo(invalidDummyTableName, ddb.client)
 
-	id := "test_id"
-	item, err := repo.GetById(context.TODO(), id)
+	id := uuid.New().String()
+	item, err := repo.GetByID(context.TODO(), id)
 
 	msg := "get dummy entity with bad repo didin't fail"
 	assert.Nil(item, msg, "returned item")
 	assert.NotNil(err, msg, "error not found")
 }
 
-func TestDummyGetByIdWithIdReturnEntity(t *testing.T) {
+func TestDummyGetByIDWithIdReturnEntity(t *testing.T) {
 	assert := require.New(t)
 	msg := "failed to get entity by valid id"
 	repo := dynamodbrepo.NewDummyDynamodbRepo(dummyTableName, ddb.client)
@@ -74,13 +74,13 @@ func TestDummyGetByIdWithIdReturnEntity(t *testing.T) {
 	err1 := saveDdbItems(
 		dummyTableName,
 		[]*domain.Dummy{expected},
-		dynamodbrepo.ToDummyDbItem,
+		dynamodbrepo.ToDummyDBItem,
 	)
 	if err1 != nil {
 		t.Fatalf("%s. error happened when preparing necesarry data, %v", msg, err1)
 	}
 
-	actual, err2 := repo.GetById(context.TODO(), expected.ID)
+	actual, err2 := repo.GetByID(context.TODO(), expected.ID)
 	assert.Nil(err2, msg, "found error")
 	assert.Equal(expected, actual, msg, "wrong entity")
 }
@@ -102,7 +102,7 @@ func TestDummyInsertWithEntityReturnEntity(t *testing.T) {
 	loaded, err2 := loadDdbItems(
 		dummyTableName,
 		[]*domain.Dummy{expected},
-		dynamodbrepo.ToDummyDbKey,
+		dynamodbrepo.ToDummyDBKey,
 		dynamodbrepo.ToDummyEntity,
 	)
 	if err2 != nil {

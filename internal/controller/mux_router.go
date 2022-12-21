@@ -3,14 +3,14 @@ package controller
 import (
 	"net/http"
 
-	"local.com/go-clean-lambda/internal/logger"
-
 	"github.com/gorilla/mux"
+	"local.com/go-clean-lambda/internal/logger"
 )
 
 // NewRouter
-//  @param controllers
-//  @return mux.Router
+//
+//	@param controllers
+//	@return mux.Router
 func NewRouter(controllers []MuxController) *mux.Router {
 	r := mux.NewRouter()
 	r.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

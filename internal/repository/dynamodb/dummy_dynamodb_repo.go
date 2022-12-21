@@ -4,12 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"local.com/go-clean-lambda/internal/domain"
-	"local.com/go-clean-lambda/internal/logger"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"local.com/go-clean-lambda/internal/domain"
+	"local.com/go-clean-lambda/internal/logger"
 )
 
 const (
@@ -17,16 +16,17 @@ const (
 	FieldDummySK string = "sk"
 )
 
-// DummyDynamodbRepo
+// DummyDynamodbRepo.
 type DummyDynamodbRepo struct {
 	tableName string
 	client    *dynamodb.DynamoDB
 }
 
 // NewDummyDynamodbRepo
-//  @param tableName
-//  @param client
-//  @return *DummyDynamodbRepo
+//
+//	@param tableName
+//	@param client
+//	@return *DummyDynamodbRepo
 func NewDummyDynamodbRepo(tableName string, client *dynamodb.DynamoDB) *DummyDynamodbRepo {
 	return &DummyDynamodbRepo{
 		tableName: tableName,
@@ -34,64 +34,71 @@ func NewDummyDynamodbRepo(tableName string, client *dynamodb.DynamoDB) *DummyDyn
 	}
 }
 
-// GetById
-//  @receiver repo
-//  @param ctx
-//  @param id
-//  @return *domain.Dummy
-//  @return error
-func (repo *DummyDynamodbRepo) GetById(ctx context.Context, id string) (*domain.Dummy, error) {
+// GetByID
+//
+//	@receiver repo
+//	@param ctx
+//	@param id
+//	@return *domain.Dummy
+//	@return error
+func (repo *DummyDynamodbRepo) GetByID(ctx context.Context, id string) (*domain.Dummy, error) {
 	if len(id) == 0 {
 		return nil, nil
 	}
 	data, err := repo.client.GetItem(&dynamodb.GetItemInput{
 		TableName: aws.String(repo.tableName),
-		Key:       ToDummyDbKey(domain.ToKeyDummy(id)),
+		Key:       ToDummyDBKey(domain.ToKeyDummy(id)),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to get item from db. table: %s, id: %s. %w", repo.tableName, id, err)
+		return nil, fmt.Errorf("get db item error. table: %s, id: %s. %w", repo.tableName, id, err)
 	}
 	logger.Debug("get from db. item: %s", logger.Pretty(data.Item))
 	return ToDummyEntity(data.Item)
 }
 
 // Insert
-//  @receiver repo
-//  @param ctx
-//  @param dummy
-//  @return *domain.Dummy
-//  @return error
+//
+//	@receiver repo
+//	@param ctx
+//	@param dummy
+//	@return *domain.Dummy
+//	@return error
 func (repo *DummyDynamodbRepo) Insert(ctx context.Context, dummy *domain.Dummy) (*domain.Dummy, error) {
 	if dummy == nil || len(dummy.ID) == 0 {
 		return nil, nil
 	}
-	_, err := repo.client.PutItem(&dynamodb.PutItemInput{
+	item, err := ToDummyDBItem(dummy)
+	if err != nil {
+		return nil, fmt.Errorf("failed build db item. %w", err)
+	}
+	_, err = repo.client.PutItem(&dynamodb.PutItemInput{
 		TableName: aws.String(repo.tableName),
-		Item:      ToDummyDbItem(dummy),
+		Item:      item,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to put item to db. table: %s, item: %s. %w", repo.tableName, logger.Pretty(dummy), err)
+		return nil, fmt.Errorf("put db item error. table: %s, item: %s. %w", repo.tableName, logger.Pretty(dummy), err)
 	}
 	logger.Debug("put to db. item: %s", logger.Pretty(dummy))
 	return dummy, nil
 }
 
-// DeleteById
-//  @receiver repo
-//  @param ctx
-//  @param id
-//  @return *domain.Dummy
-//  @return error
-func (repo *DummyDynamodbRepo) DeleteById(ctx context.Context, id string) (*domain.Dummy, error) {
+// DeleteByID
+//
+//	@receiver repo
+//	@param ctx
+//	@param id
+//	@return *domain.Dummy
+//	@return error
+func (repo *DummyDynamodbRepo) DeleteByID(ctx context.Context, id string) (*domain.Dummy, error) {
 	if len(id) == 0 {
 		return nil, nil
 	}
 	_, err := repo.client.DeleteItem(&dynamodb.DeleteItemInput{
 		TableName: aws.String(repo.tableName),
-		Key:       ToDummyDbKey(domain.ToKeyDummy(id)),
+		Key:       ToDummyDBKey(domain.ToKeyDummy(id)),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to delete item from db. table: %s, id: %s. %w", repo.tableName, id, err)
+		return nil, fmt.Errorf("delete db item error. table: %s, id: %s. %w", repo.tableName, id, err)
 	}
 	logger.Debug("delete from db. id: %s", id)
 	return &domain.Dummy{
@@ -99,11 +106,11 @@ func (repo *DummyDynamodbRepo) DeleteById(ctx context.Context, id string) (*doma
 	}, nil
 }
 
-// ToDbKey
+// ToDummyDBKey
 //
-//  @param dummy
-//  @return map
-func ToDummyDbKey(dummy *domain.Dummy) map[string]*dynamodb.AttributeValue {
+//	@param dummy
+//	@return map
+func ToDummyDBKey(dummy *domain.Dummy) map[string]*dynamodb.AttributeValue {
 	if dummy == nil {
 		return make(map[string]*dynamodb.AttributeValue)
 	}
@@ -111,40 +118,45 @@ func ToDummyDbKey(dummy *domain.Dummy) map[string]*dynamodb.AttributeValue {
 	return addDummyKeys(item, dummy)
 }
 
-// ToDbItem
+// ToDummyDBItem
 //
-//  @param dummy
-//  @return map
-func ToDummyDbItem(dummy *domain.Dummy) map[string]*dynamodb.AttributeValue {
+//	@param dummy
+//	@return map
+func ToDummyDBItem(dummy *domain.Dummy) (map[string]*dynamodb.AttributeValue, error) {
 	if dummy == nil {
-		return make(map[string]*dynamodb.AttributeValue)
+		return make(map[string]*dynamodb.AttributeValue), nil
 	}
-	// TODO: error handle
-	item, _ := dynamodbattribute.MarshalMap(dummy)
+	item, err := dynamodbattribute.MarshalMap(dummy)
+	if err != nil {
+		return nil, fmt.Errorf("marshal dummy entity error. %w", err)
+	}
 	item = addDummyKeys(item, dummy)
-	return item
+	return item, nil
 }
 
-// ToEntity
+// ToDummyEntity
 //
-//  @param item
-//  @return *domain.Dummy
-//  @return error
+//	@param item
+//	@return *domain.Dummy
+//	@return error
 func ToDummyEntity(item map[string]*dynamodb.AttributeValue) (*domain.Dummy, error) {
 	if len(item) == 0 {
 		return nil, nil
 	}
 	dummy := &domain.Dummy{}
 	err := dynamodbattribute.UnmarshalMap(item, dummy)
-	return dummy, err
+	if err != nil {
+		return nil, fmt.Errorf("unmarshal dummy item error. %w", err)
+	}
+	return dummy, nil
 }
 
-// addKeys
+// addDummyKeys
 // set pk and sk into db item map according to entity
 //
-//  @param item
-//  @param dummy
-//  @return map
+//	@param item
+//	@param dummy
+//	@return map
 func addDummyKeys(item map[string]*dynamodb.AttributeValue, dummy *domain.Dummy) map[string]*dynamodb.AttributeValue {
 	item[FieldDummyPK] = &dynamodb.AttributeValue{S: aws.String("test")}
 	item[FieldDummySK] = &dynamodb.AttributeValue{S: aws.String(dummy.ID)}
