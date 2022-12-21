@@ -1,4 +1,4 @@
-package bizcontroller
+package controller
 
 import (
 	"fmt"
@@ -6,48 +6,33 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
-	"local.com/go-clean-lambda/internal/controller"
 	"local.com/go-clean-lambda/internal/logger"
 	"local.com/go-clean-lambda/internal/usecase"
 )
 
 var ErrObjectNotFound error = errors.New("object not found")
 
-// DummyController implements interface controller.MuxController.
+// DummyController
+// works as extends MuxControllerImpl.
 type DummyController struct {
-	rootPath   string
-	handlerMap map[string]map[string]*controller.MuxRouterHandler
-	usecase    *usecase.DummyUseCase
-}
-
-// GetRootPath
-//
-//	@receiver c
-//	@return string
-func (c *DummyController) GetRootPath() string {
-	return c.rootPath
-}
-
-// GetHandlers
-//
-//	@receiver c
-//	@return map
-func (c *DummyController) GetHandlers() map[string]map[string]*controller.MuxRouterHandler {
-	return c.handlerMap
+	*MuxControllerImpl
+	usecase *usecase.DummyUseCase
 }
 
 // NewDummyController
 //
 //	@param logMdf
 //	@param usecase
-//	@return controller.MuxController
+//	@return *DummyController
 func NewDummyController(logMdf mux.MiddlewareFunc, usecase *usecase.DummyUseCase) *DummyController {
 	c := &DummyController{
-		rootPath:   "/api/dummy",
-		handlerMap: make(map[string]map[string]*controller.MuxRouterHandler),
-		usecase:    usecase,
+		MuxControllerImpl: NewMuxControllerImpl(
+			"/api/dummy",
+			make(map[string]map[string]*MuxRouterHandler),
+		),
+		usecase: usecase,
 	}
-	controller.AddMuxRouter(c, "/{id}", []string{
+	c.AddMuxRouter("/{id}", []string{
 		http.MethodGet,
 	}, []mux.MiddlewareFunc{
 		logMdf,
@@ -55,14 +40,14 @@ func NewDummyController(logMdf mux.MiddlewareFunc, usecase *usecase.DummyUseCase
 		vars := mux.Vars(r)
 		return c.handleGet(w, r, vars["id"])
 	})
-	controller.AddMuxRouter(c, "", []string{
+	c.AddMuxRouter("", []string{
 		http.MethodPost,
 	}, []mux.MiddlewareFunc{
 		logMdf,
 	}, func(w http.ResponseWriter, r *http.Request) error {
 		return c.handlePost(w, r)
 	})
-	controller.AddMuxRouter(c, "/{id}", []string{
+	c.AddMuxRouter("/{id}", []string{
 		http.MethodDelete,
 	}, []mux.MiddlewareFunc{
 		logMdf,
@@ -88,8 +73,7 @@ func (c *DummyController) handleGet(w http.ResponseWriter, r *http.Request, id s
 	}
 	s := fmt.Sprintf("handle get. id: %s, got bo: %s", id, logger.Pretty(bo))
 	logger.Info(s)
-	_, err = w.Write([]byte(s))
-	return errors.Wrap(errors.New(err.Error()), "write response failed")
+	return c.WriteResponse(w, s)
 }
 
 // handlePost
@@ -113,8 +97,7 @@ func (c *DummyController) handlePost(w http.ResponseWriter, r *http.Request) err
 	}
 	s := logger.Pretty(bo)
 	logger.Debug("handle add. bo: %s", s)
-	_, err = w.Write([]byte(s))
-	return errors.Wrap(errors.New(err.Error()), "write response failed")
+	return c.WriteResponse(w, s)
 }
 
 // handleDelete
@@ -135,6 +118,5 @@ func (c *DummyController) handleDelete(w http.ResponseWriter, r *http.Request, i
 	}
 	s := fmt.Sprintf("handle delete. id: %s", id)
 	logger.Debug(s)
-	_, err = w.Write([]byte(s))
-	return errors.Wrap(errors.New(err.Error()), "write response failed")
+	return c.WriteResponse(w, s)
 }

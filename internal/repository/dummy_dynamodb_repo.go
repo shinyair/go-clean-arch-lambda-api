@@ -1,4 +1,4 @@
-package dynamodbrepo
+package repository
 
 import (
 	"context"

@@ -64,8 +64,7 @@ project
 |    |    ├── app.go # init beans
 |    |    └── app_config.go # handle configs
 |    ├── controller # handle http requests by mux
-|    |    ├── biz
-|    |    |    └── dummy_controller.go # entrance of dummy logic
+|    |    ├── dummy-controller.go # entrance of dummy service
 |    |    ├── controller.go # interface
 |    |    ├── mux_controller.go # mux implementatation of controller.go
 |    |    ├── mux_middlewares.go # implement necessary mux middlewares(also known as interseptors/filters)
@@ -73,9 +72,8 @@ project
 |    ├── domain
 |    |    └── dummy.go # entity and repository interface
 |    ├── repository
-|    |    └── dynamodb
-|    |         ├── dummy_dynamodb_repo.go # dynamodb implementation of dummy repository
-|    |         └── *_test.go # db integration test
+|    |    ├── dummy_dynamodb_repo.go # dynamodb implementation of dummy repository
+|    |    └── *_test.go # db integration test
 |    ├── usecase
 |    |    ├── dummy_usecase # biz logic of dummy
 |    |    └── *_test.go # unit test
@@ -133,7 +131,7 @@ When debuging from local without localstack, aws services should be prepared in 
 ### Run unit tests and integration tests
 - start Docker Desktop
 - run cmd `go test ./...` to execute unit tests
-- run cmd `go test ./... -tags integration` to execute use case level unit tests and database level integration te
+- run cmd `go test ./... -tags integration` to execute use case level unit tests and database level integration tests
 
 ## Deployment
 ### Build and package by npm
@@ -141,6 +139,7 @@ When debuging from local without localstack, aws services should be prepared in 
   - [How to cross compile from Windows to Linux - stackoverflow](https://stackoverflow.com/questions/20829155/how-to-cross-compile-from-windows-to-linux)
   - [How to use environment variables in NPM](https://blog.jimmydc.com/cross-env-for-environment-variables/)
 - open folder: `go-clean-arch-lambda-api`
+  - install cmd tools by npm for Windows
   - run cmd `npm install copyfiles --save-dev`
   - run cmd `npm install rimraf --save-dev`
   - add following scripts in of package.json
@@ -148,15 +147,18 @@ When debuging from local without localstack, aws services should be prepared in 
   "scripts": {
     "prebuild": "rm -rf deployment/output/* && copyfiles --flat configs/* deployment/output/configs",
     "build": "set GOARCH=amd64&& set GOOS=linux&& go build -o deployment/output/bin/main cmd/main.go",
+    "package": "cd deployment && rm -rf output.zip && 7z a -tzip output.zip ./output/bin/",
     "test": "go test ./... -tags integration",
     "lint": "golangci-lint run"
   },
   ```
+  - for Linux or MacOS, please edit the scripts accordingly
   - run cmd `npm run lint`
   - run cmd `npm run test`
   - run cmd `npm run build`
   - run cmd `npm run package`
   - check `deployment/outout` folder, the `configs` folder is copied & pasted, and a `main` file is generated
+  - check `deployment` fodler, the `output.zip` is generated
 
 
 ### Deploy Serverless services
@@ -184,7 +186,7 @@ Open API Gateway service on AWS Console, and find the deployed API Gateway by re
 Find url of your API Gateway, and try to invoke:
 - run cmd `npm install curl -g`
 - run cmd `curl {api_gateway_invoke_url}/api/dummy/1` and check the result
-- run cmd `curl -X POST {api_gateway_invoke_url}/api/dummy??id=1&name=aaa&attr=ttt`
+- run cmd `curl -X POST "{api_gateway_invoke_url}/api/dummy?id=1&name=aaa&attr=ttt"`
 - run cmd `curl {api_gateway_invoke_url}/api/dummy/1` and check the result
 - run cmd `curl -X DELETE {api_gateway_invoke_url}/api/dummy/1`
 - run cmd `curl {api_gateway_invoke_url}/api/dummy/1` and check the result
@@ -284,7 +286,6 @@ project
 |    ├── controller
 |    ├── domain
 |    ├── repository
-|    |    └── dynamodb
 |    ├── usecase
 |    └── utils
 ├── scripts
@@ -303,7 +304,6 @@ For Windows, setting go env `GOARCH` as `amd64`, `GOOS` as `linux` before build 
 - [How to cross compile from Windows to Linux - stackoverflow](https://stackoverflow.com/questions/20829155/how-to-cross-compile-from-windows-to-linux)
 - [How to use environment variables in NPM](https://blog.jimmydc.com/cross-env-for-environment-variables/)
 
-Add scripts in `package.json` for automation:
 ```
   "scripts": {
     "preinstall": "...", // install necessary external tools, such as serverless framework and linters

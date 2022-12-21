@@ -13,7 +13,10 @@ import (
 func GetLogMiddleware() mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			logger.Info("handle request. path: %s, method: %s, jwt: %s, middleware: log", r.URL.Path, r.Method, "TODO:")
+			jwtHeader := "TODO:"
+			logger.Info(
+				"handle request. path: %s, method: %s, middleware: log, jwt header: %s",
+				r.URL.Path, r.Method, jwtHeader)
 			next.ServeHTTP(w, r)
 		})
 	}

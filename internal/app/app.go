@@ -6,9 +6,8 @@ import (
 	awsdynamodb "github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/pkg/errors"
 	"local.com/go-clean-lambda/internal/controller"
-	bizcontroller "local.com/go-clean-lambda/internal/controller/biz"
 	"local.com/go-clean-lambda/internal/logger"
-	dynamodbrepo "local.com/go-clean-lambda/internal/repository/dynamodb"
+	"local.com/go-clean-lambda/internal/repository"
 	"local.com/go-clean-lambda/internal/usecase"
 )
 
@@ -35,7 +34,7 @@ func InitDummyControllers() ([]controller.MuxController, error) {
 	}
 	awssess := awssession.Must(awssession.NewSessionWithOptions(awsopt))
 	dynamodbClient := awsdynamodb.New(awssess)
-	dummyRepo := dynamodbrepo.NewDummyDynamodbRepo(
+	dummyRepo := repository.NewDummyDynamodbRepo(
 		appConfig.DynamodbCfg.DummyTableName,
 		dynamodbClient)
 	// init usecase
@@ -43,7 +42,7 @@ func InitDummyControllers() ([]controller.MuxController, error) {
 	// init middlewares
 	logMdf := controller.GetLogMiddleware()
 	// init controllers
-	dummyController := bizcontroller.NewDummyController(logMdf, dummyUsecase)
+	dummyController := controller.NewDummyController(logMdf, dummyUsecase)
 	return []controller.MuxController{
 		dummyController,
 	}, nil

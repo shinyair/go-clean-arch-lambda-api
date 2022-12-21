@@ -1,7 +1,7 @@
 //go:build integration
 // +build integration
 
-package dynamodbrepo_test
+package repository_test
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 	"local.com/go-clean-lambda/internal/domain"
-	dynamodbrepo "local.com/go-clean-lambda/internal/repository/dynamodb"
+	"local.com/go-clean-lambda/internal/repository"
 )
 
 const (
@@ -25,22 +25,22 @@ func buildCreateDummyTableInput() *dynamodb.CreateTableInput {
 	return &dynamodb.CreateTableInput{
 		AttributeDefinitions: []*dynamodb.AttributeDefinition{
 			{
-				AttributeName: aws.String(dynamodbrepo.FieldDummyPK),
+				AttributeName: aws.String(repository.FieldDummyPK),
 				AttributeType: aws.String(dynamodb.ScalarAttributeTypeS),
 			},
 			{
-				AttributeName: aws.String(dynamodbrepo.FieldDummySK),
+				AttributeName: aws.String(repository.FieldDummySK),
 				AttributeType: aws.String(dynamodb.ScalarAttributeTypeS),
 			},
 		},
 		BillingMode: aws.String(dynamodb.BillingModePayPerRequest),
 		KeySchema: []*dynamodb.KeySchemaElement{
 			{
-				AttributeName: aws.String(dynamodbrepo.FieldDummyPK),
+				AttributeName: aws.String(repository.FieldDummyPK),
 				KeyType:       aws.String(dynamodb.KeyTypeHash),
 			},
 			{
-				AttributeName: aws.String(dynamodbrepo.FieldDummySK),
+				AttributeName: aws.String(repository.FieldDummySK),
 				KeyType:       aws.String(dynamodb.KeyTypeRange),
 			},
 		},
@@ -50,7 +50,7 @@ func buildCreateDummyTableInput() *dynamodb.CreateTableInput {
 
 func TestDummyGetByIDWithBadRepoReturnError(t *testing.T) {
 	assert := require.New(t)
-	repo := dynamodbrepo.NewDummyDynamodbRepo(invalidDummyTableName, ddb.client)
+	repo := repository.NewDummyDynamodbRepo(invalidDummyTableName, ddb.client)
 
 	id := uuid.New().String()
 	item, err := repo.GetByID(context.TODO(), id)
@@ -63,7 +63,7 @@ func TestDummyGetByIDWithBadRepoReturnError(t *testing.T) {
 func TestDummyGetByIDWithIdReturnEntity(t *testing.T) {
 	assert := require.New(t)
 	msg := "failed to get entity by valid id"
-	repo := dynamodbrepo.NewDummyDynamodbRepo(dummyTableName, ddb.client)
+	repo := repository.NewDummyDynamodbRepo(dummyTableName, ddb.client)
 
 	random := uuid.New().String()
 	expected := &domain.Dummy{
@@ -74,7 +74,7 @@ func TestDummyGetByIDWithIdReturnEntity(t *testing.T) {
 	err1 := saveDdbItems(
 		dummyTableName,
 		[]*domain.Dummy{expected},
-		dynamodbrepo.ToDummyDBItem,
+		repository.ToDummyDBItem,
 	)
 	if err1 != nil {
 		t.Fatalf("%s. error happened when preparing necesarry data, %v", msg, err1)
@@ -88,7 +88,7 @@ func TestDummyGetByIDWithIdReturnEntity(t *testing.T) {
 func TestDummyInsertWithEntityReturnEntity(t *testing.T) {
 	assert := require.New(t)
 	msg := "failed to insert valid entity"
-	repo := dynamodbrepo.NewDummyDynamodbRepo(dummyTableName, ddb.client)
+	repo := repository.NewDummyDynamodbRepo(dummyTableName, ddb.client)
 
 	random := uuid.New().String()
 	expected := &domain.Dummy{
@@ -102,8 +102,8 @@ func TestDummyInsertWithEntityReturnEntity(t *testing.T) {
 	loaded, err2 := loadDdbItems(
 		dummyTableName,
 		[]*domain.Dummy{expected},
-		dynamodbrepo.ToDummyDBKey,
-		dynamodbrepo.ToDummyEntity,
+		repository.ToDummyDBKey,
+		repository.ToDummyEntity,
 	)
 	if err2 != nil {
 		t.Fatalf("%s. error happened when load db data, %v", msg, err2)

@@ -1,7 +1,7 @@
 //go:build integration
 // +build integration
 
-package dynamodbrepo_test
+package repository_test
 
 import (
 	"context"
@@ -67,7 +67,7 @@ func buildDockerComposePath() error {
 	if err != nil {
 		return err
 	}
-	configDir, err := filepath.Abs(currDir + "../../../../test/dynamodb-local")
+	configDir, err := filepath.Abs(currDir + "../../../test/dynamodb-local")
 	if err != nil {
 		return err
 	}
