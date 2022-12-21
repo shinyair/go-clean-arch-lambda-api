@@ -11,6 +11,7 @@ type Config struct {
 	Stage       string
 	AwsEnvCfg   *AwsEnvConfig
 	LogCfg      *LogConfig
+	AuthCfg     *AuthConfig
 	DynamodbCfg *DynamodbConfig
 }
 
@@ -24,6 +25,11 @@ type AwsEnvConfig struct {
 	AccountID string
 	Region    string
 	Profile   string
+}
+
+type AuthConfig struct {
+	PublicKey  string
+	PrivateKey string
 }
 
 type DynamodbConfig struct {
@@ -41,6 +47,10 @@ func NewAppConfig() (*Config, error) {
 		MinLevel:  os.Getenv("LOG_MIN_LEVEL"),
 		CrNewline: os.Getenv("LOG_CR_NEWLINE") == "true",
 	}
+	authConfig := &AuthConfig{
+		PublicKey:  os.Getenv("JWT_PUBLIC_KEY"),
+		PrivateKey: os.Getenv("JWT_PRIVATE_KEY"),
+	}
 	dynamodbConfig := &DynamodbConfig{
 		DummyTableName: os.Getenv("DUMMY_TABLE_NAME"),
 	}
@@ -50,6 +60,7 @@ func NewAppConfig() (*Config, error) {
 		Stage:       os.Getenv("STAGE"),
 		AwsEnvCfg:   awsEnvConfig,
 		LogCfg:      logConfig,
+		AuthCfg:     authConfig,
 		DynamodbCfg: dynamodbConfig,
 	}
 	return &appConfig, nil
