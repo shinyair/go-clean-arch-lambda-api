@@ -9,7 +9,7 @@
     "package": "cd deployment && rm -rf output.zip && 7z a -tzip output.zip ./output/bin/",
     "deploy": "cd deployment && sls deploy --force",
     "undeploy": "cd deployment && sls remove",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "go test ./... -tags integration"
   },
   "author": "",
   "license": "ISC",

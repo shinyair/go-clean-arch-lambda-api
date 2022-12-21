@@ -12,6 +12,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 )
 
+const (
+	FieldDummyPK string = "pk"
+	FieldDummySK string = "sk"
+)
+
 // DummyDynamodbRepo
 type DummyDynamodbRepo struct {
 	tableName string
@@ -41,13 +46,13 @@ func (repo *DummyDynamodbRepo) GetById(ctx context.Context, id string) (*domain.
 	}
 	data, err := repo.client.GetItem(&dynamodb.GetItemInput{
 		TableName: aws.String(repo.tableName),
-		Key:       repo.toDbKey(domain.ToKeyDummy(id)),
+		Key:       ToDummyDbKey(domain.ToKeyDummy(id)),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get item from db. table: %s, id: %s. %w", repo.tableName, id, err)
 	}
 	logger.Debug("get from db. item: %s", logger.Pretty(data.Item))
-	return repo.toEntity(data.Item)
+	return ToDummyEntity(data.Item)
 }
 
 // Insert
@@ -62,7 +67,7 @@ func (repo *DummyDynamodbRepo) Insert(ctx context.Context, dummy *domain.Dummy) 
 	}
 	_, err := repo.client.PutItem(&dynamodb.PutItemInput{
 		TableName: aws.String(repo.tableName),
-		Item:      repo.toDbItem(dummy),
+		Item:      ToDummyDbItem(dummy),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to put item to db. table: %s, item: %s. %w", repo.tableName, logger.Pretty(dummy), err)
@@ -83,7 +88,7 @@ func (repo *DummyDynamodbRepo) DeleteById(ctx context.Context, id string) (*doma
 	}
 	_, err := repo.client.DeleteItem(&dynamodb.DeleteItemInput{
 		TableName: aws.String(repo.tableName),
-		Key:       repo.toDbKey(domain.ToKeyDummy(id)),
+		Key:       ToDummyDbKey(domain.ToKeyDummy(id)),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to delete item from db. table: %s, id: %s. %w", repo.tableName, id, err)
@@ -94,38 +99,38 @@ func (repo *DummyDynamodbRepo) DeleteById(ctx context.Context, id string) (*doma
 	}, nil
 }
 
-// toDbKey
-//  @receiver repo
+// ToDbKey
+//
 //  @param dummy
 //  @return map
-func (repo *DummyDynamodbRepo) toDbKey(dummy *domain.Dummy) map[string]*dynamodb.AttributeValue {
+func ToDummyDbKey(dummy *domain.Dummy) map[string]*dynamodb.AttributeValue {
 	if dummy == nil {
 		return make(map[string]*dynamodb.AttributeValue)
 	}
 	item := make(map[string]*dynamodb.AttributeValue)
-	return repo.addKeys(item, dummy)
+	return addDummyKeys(item, dummy)
 }
 
-// toDbItem
-//  @receiver repo
+// ToDbItem
+//
 //  @param dummy
 //  @return map
-func (repo *DummyDynamodbRepo) toDbItem(dummy *domain.Dummy) map[string]*dynamodb.AttributeValue {
+func ToDummyDbItem(dummy *domain.Dummy) map[string]*dynamodb.AttributeValue {
 	if dummy == nil {
 		return make(map[string]*dynamodb.AttributeValue)
 	}
 	// TODO: error handle
 	item, _ := dynamodbattribute.MarshalMap(dummy)
-	item = repo.addKeys(item, dummy)
+	item = addDummyKeys(item, dummy)
 	return item
 }
 
-// toEntity
-//  @receiver repo
+// ToEntity
+//
 //  @param item
 //  @return *domain.Dummy
 //  @return error
-func (repo *DummyDynamodbRepo) toEntity(item map[string]*dynamodb.AttributeValue) (*domain.Dummy, error) {
+func ToDummyEntity(item map[string]*dynamodb.AttributeValue) (*domain.Dummy, error) {
 	if len(item) == 0 {
 		return nil, nil
 	}
@@ -134,13 +139,14 @@ func (repo *DummyDynamodbRepo) toEntity(item map[string]*dynamodb.AttributeValue
 	return dummy, err
 }
 
-// addKeys set pk and sk according to entity
-//  @receiver repo
+// addKeys
+// set pk and sk into db item map according to entity
+//
 //  @param item
 //  @param dummy
 //  @return map
-func (repo *DummyDynamodbRepo) addKeys(item map[string]*dynamodb.AttributeValue, dummy *domain.Dummy) map[string]*dynamodb.AttributeValue {
-	item["pk"] = &dynamodb.AttributeValue{S: aws.String("test")}
-	item["sk"] = &dynamodb.AttributeValue{S: aws.String(dummy.ID)}
+func addDummyKeys(item map[string]*dynamodb.AttributeValue, dummy *domain.Dummy) map[string]*dynamodb.AttributeValue {
+	item[FieldDummyPK] = &dynamodb.AttributeValue{S: aws.String("test")}
+	item[FieldDummySK] = &dynamodb.AttributeValue{S: aws.String(dummy.ID)}
 	return item
 }

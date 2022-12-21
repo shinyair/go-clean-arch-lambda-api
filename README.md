@@ -24,8 +24,13 @@ It's FREE!
 - docs-yaml, which is provided by Microsoft. It helps format serverless.yml in vscode
 
 #### serverless
-Serverless Framework is easy for starup to understand the architecture of services and also it support not only AWS but also Google Cloud Platform and Microsoft Azure. Instal Serverless Framework by npm: `npm install -g serverless`.
+Serverless Framework is easy for starup to understand the architecture of services and also it support not only AWS but also Google Cloud Platform and Microsoft Azure. Install Serverless Framework by npm: `npm install -g serverless`.
 [Serverless.yml Reference](https://www.serverless.com/framework/docs/providers/aws/guide/serverless.yml)
+
+#### Docker Desktop
+Docker Desktop provides many docker images help running code in required env, which saves a lot of time to configure the env.
+In this project, a docker image is used for running dynnamodb-local for dynamodb integration test.
+[Docker Desktop](https://www.docker.com/)
 
 #### 7z(for windows only)
 Windows desn't support zip files by cmd natively, so use 7z cmd line to support package zip for deployment by scripts.
@@ -63,12 +68,15 @@ project
 |    |    └── dummy.go # entity and repository interface
 |    ├── repository
 |    |    └── dynamodb
-|    |         └── dummy_dynamodb_repo.go # dynamodb implementation of dummy repository
+|    |         ├── dummy_dynamodb_repo.go # dynamodb implementation of dummy repository
+|    |         └── *_test.go # db integration test
 |    ├── usecase
-|    |    └── dummy_usecase # biz logic of dummy
+|    |    ├── dummy_usecase # biz logic of dummy
+|    |    └── *_test.go # unit test
 |    └── logger
 |         └── logger.go # logger utils
-├── scripts
+├── scripts # helper scripts
+├── test # test configs
 ├── .gitignore
 ├── go.mod
 ├── go.sum
@@ -112,6 +120,11 @@ When debuging from local without localstack, aws services should be prepared in 
 - run cmd `go run ./cmd/local/main.go` under `go-clean-arch-lambda-api`
 - test `get`/`post`/`delete` dummy api by Postman or the other tools
 
+### Run unit tests and integration tests
+- start Docker Desktop
+- run cmd `go test ./...` to execute unit tests
+- run cmd `go test ./... -tags integration` to execute use case level unit tests and database level integration te
+
 ## Deployment
 ### Build and package by npm
 - For Windows, we need to set go env `GOARCH` as `amd64`, `GOOS` as `linux`, because the online lambda runtime is based on linux core. check go environment variables by `go env`. 
@@ -125,9 +138,10 @@ When debuging from local without localstack, aws services should be prepared in 
   "scripts": {
     "prebuild": "rm -rf deployment/output/* && copyfiles --flat configs/* deployment/output/configs",
     "build": "set GOARCH=amd64&& set GOOS=linux&& go build -o deployment/output/bin/main cmd/main.go",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "go test ./... -tags integration"
   },
   ```
+  - run cmd `npm run test`
   - run cmd `npm run build`
   - run cmd `npm run package`
   - check `deployment/outout` folder, the `configs` folder is copied & pasted, and a `main` file is generated
@@ -205,6 +219,14 @@ project
 [The Clean Code Blog](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
 <img src="https://blog.cleancoder.com/uncle-bob/images/2012-08-13-the-clean-architecture/CleanArchitecture.jpg">
 
+### Test in Golang
+#### Naming conventions
+Test names should include Action(what function), Condition(what param), and Expectation(what return).
+[Naming standards for unit tests](https://osherove.com/blog/2005/4/3/naming-standards-for-unit-tests.html)
+#### Separate integration tests from unit tests 
+Use a build tag to seperate integration tests from unit tests for different kinds of test scenarios.
+[Separate Your Go Tests with Build Tags](https://mickey.dev/posts/go-build-tags-testing/)
+
 ## Appendix
 ### Create new projects 
 #### Create the npm project
@@ -232,6 +254,7 @@ project
 ├── deployment 
 ├── internal 
 ├── scripts
+├── test
 └── README.md
 ```
 Write internal code follow the `clean architecture`. Example:
@@ -250,6 +273,7 @@ project
 |    ├── usecase
 |    └── utils
 ├── scripts
+├── test
 ├── .gitignore
 ├── go.mod
 ├── go.sum
@@ -259,18 +283,22 @@ project
 ```
 Write your own code in each layter and run cmd `go get xxxx` to install a new package when necessary.
 
-#### Add scripts to build, packge, and deploy the program
-For Windows, we need to set go env `GOARCH` as `amd64`, `GOOS` as `linux`, because the online lambda runtime is based on linux core. check go environment variables by `go env`. 
+#### Add scripts to lint, test, build, packge, and deploy the program
+For Windows, setting go env `GOARCH` as `amd64`, `GOOS` as `linux` before build the executable files, because the online lambda runtime is based on linux core. check go environment variables by `go env`. 
 - [How to cross compile from Windows to Linux - stackoverflow](https://stackoverflow.com/questions/20829155/how-to-cross-compile-from-windows-to-linux)
 - [How to use environment variables in NPM](https://blog.jimmydc.com/cross-env-for-environment-variables/)
 
-Add scripts in `package.json` like:
+Add scripts in `package.json` for automation:
 ```
   "scripts": {
-    "prebuild": "rm -rf deployment/output/* && copyfiles --flat configs/* deployment/output/configs",
-    "build": "set GOARCH=amd64&& set GOOS=linux&& go build -o deployment/output/bin/main cmd/main.go",
-    "deploy": "cd deployment && sls deploy --force",
-    "undeploy": "cd deployment && sls remove",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "preinstall": "...", // install necessary external tools, such as serverless framework and linters
+    "prebuild": "...", // clear build output and copy necessary data to output folder
+    "build": "...", // build go executable file
+    "package": "...", // build zip file
+    "deploy": "...", // deploy to aws by serverless framework
+    "undeploy": "...", // destroy current stack
+    "test": "...", // test go
+    "lint": "..." // run linters
+    ... // any other required scripts
   },
 ```
