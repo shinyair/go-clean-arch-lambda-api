@@ -4,8 +4,9 @@ go 1.18
 
 require (
 	github.com/aws/aws-lambda-go v1.32.1
-	github.com/aws/aws-sdk-go v1.44.54
+	github.com/aws/aws-sdk-go v1.44.160
 	github.com/awslabs/aws-lambda-go-api-proxy v0.13.3
+	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/logutils v1.0.0
