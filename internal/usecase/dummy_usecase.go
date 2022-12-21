@@ -2,9 +2,8 @@ package usecase
 
 import (
 	"context"
-	"errors"
-	"fmt"
 
+	"github.com/pkg/errors"
 	"local.com/go-clean-lambda/internal/domain"
 	"local.com/go-clean-lambda/internal/logger"
 )
@@ -50,11 +49,11 @@ func NewDummyUseCase(dummyRepo domain.DummyRepository) *DummyUseCase {
 //	@return error
 func (uc *DummyUseCase) Get(ctx context.Context, id string) (*DummyBo, error) {
 	if len(id) == 0 {
-		return nil, fmt.Errorf("%w. detail: %s", ErrInvalidInput, "blank id")
+		return nil, errors.Wrap(ErrInvalidInput, "blank id")
 	}
 	entity, err := uc.dummyRepo.GetByID(ctx, id)
 	if err != nil {
-		return nil, fmt.Errorf("repository error with id: %s, caused by: %w", id, err)
+		return nil, errors.Wrapf(err, "repository error with id: %s", id)
 	}
 	return uc.buildBo(entity), nil
 }
@@ -68,23 +67,23 @@ func (uc *DummyUseCase) Get(ctx context.Context, id string) (*DummyBo, error) {
 //	@return error
 func (uc *DummyUseCase) Add(ctx context.Context, bo *DummyBo) (*DummyBo, error) {
 	if bo == nil || !bo.IsValid() {
-		return nil, fmt.Errorf("%w. detail: %s", ErrInvalidInput, fmt.Sprintf("invalid bo: %s", logger.Pretty(bo)))
+		return nil, errors.Wrapf(ErrInvalidInput, "invalid bo: %s", logger.Pretty(bo))
 	}
 	entity := uc.buildEntity(bo)
 	entity, err := uc.dummyRepo.Insert(ctx, entity)
 	if err != nil {
-		return nil, fmt.Errorf("repository error with bo: %s, caused by: %w", logger.Pretty(bo), err)
+		return nil, errors.Wrapf(err, "repository error with bo: %s", logger.Pretty(bo))
 	}
 	return uc.buildBo(entity), nil
 }
 
 func (uc *DummyUseCase) Remove(ctx context.Context, id string) (*DummyBo, error) {
 	if len(id) == 0 {
-		return nil, fmt.Errorf("%w. detail: %s", ErrInvalidInput, "blank id")
+		return nil, errors.Wrap(ErrInvalidInput, "blank id")
 	}
 	entity, err := uc.dummyRepo.DeleteByID(ctx, id)
 	if err != nil {
-		return nil, fmt.Errorf("repository error with id: %s, caused by: %w", id, err)
+		return nil, errors.Wrapf(err, "repository error with id: %s", id)
 	}
 	return uc.buildBo(entity), nil
 }

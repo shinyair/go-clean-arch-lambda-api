@@ -2,13 +2,13 @@ package usecase_test
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"local.com/go-clean-lambda/internal/domain"
+	"local.com/go-clean-lambda/internal/logger"
 	"local.com/go-clean-lambda/internal/usecase"
 )
 
@@ -18,12 +18,26 @@ const (
 
 var errBadRepositoryAction error = errors.New("mocked repo error")
 
+func TestTraceableErrorLog(t *testing.T) {
+	items := []*domain.Dummy{}
+	repo := NewDummyMockRepository(items)
+	u := usecase.NewDummyUseCase(repo)
+
+	_, err := u.Get(context.TODO(), invalidDummyID)
+
+	msg := "failed to test traceable error log"
+	assertions := assert.New(t)
+	assertions.NotNil(err, msg, "error not found")
+	logger.Error("get with bad repo failed", err)
+}
+
 func TestDummyGetWithBadRepoReturnError(t *testing.T) {
 	items := []*domain.Dummy{}
 	repo := NewDummyMockRepository(items)
 	u := usecase.NewDummyUseCase(repo)
 
 	bo, err := u.Get(context.TODO(), invalidDummyID)
+
 	msg := "get with bad repo didn't fail"
 	assertions := assert.New(t)
 	assertions.NotNil(err, msg, "error not found")
@@ -82,7 +96,7 @@ func (r *DummyMockRepository) GetByID(ctx context.Context, id string) (*domain.D
 		return nil, nil
 	}
 	if id == invalidDummyID {
-		return nil, fmt.Errorf("%w: %s", errBadRepositoryAction, "GetByID")
+		return nil, errors.Wrap(errBadRepositoryAction, "GetByID")
 	}
 	return r.dmap[id], nil
 }
@@ -92,7 +106,7 @@ func (r *DummyMockRepository) Insert(ctx context.Context, dummy *domain.Dummy) (
 		return nil, nil
 	}
 	if dummy.ID == invalidDummyID {
-		return nil, fmt.Errorf("%w: %s", errBadRepositoryAction, "Insert")
+		return nil, errors.Wrap(errBadRepositoryAction, "Insert")
 	}
 	r.dmap[dummy.ID] = dummy
 	return dummy, nil
@@ -103,7 +117,7 @@ func (r *DummyMockRepository) DeleteByID(ctx context.Context, id string) (*domai
 		return nil, nil
 	}
 	if id == invalidDummyID {
-		return nil, fmt.Errorf("%w: %s", errBadRepositoryAction, "DeleteByID")
+		return nil, errors.Wrap(errBadRepositoryAction, "DeleteByID")
 	}
 	dummy := r.dmap[id]
 	delete(r.dmap, id)

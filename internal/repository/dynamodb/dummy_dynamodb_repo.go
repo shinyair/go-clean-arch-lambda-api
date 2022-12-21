@@ -2,11 +2,11 @@ package dynamodbrepo
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"github.com/pkg/errors"
 	"local.com/go-clean-lambda/internal/domain"
 	"local.com/go-clean-lambda/internal/logger"
 )
@@ -50,7 +50,9 @@ func (repo *DummyDynamodbRepo) GetByID(ctx context.Context, id string) (*domain.
 		Key:       ToDummyDBKey(domain.ToKeyDummy(id)),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("get db item error. table: %s, id: %s. %w", repo.tableName, id, err)
+		// new an error to record stack from current position
+		rootErr := errors.New(err.Error())
+		return nil, errors.Wrapf(rootErr, "get db item error. table: %s, id: %s", repo.tableName, id)
 	}
 	logger.Debug("get from db. item: %s", logger.Pretty(data.Item))
 	return ToDummyEntity(data.Item)
@@ -69,14 +71,15 @@ func (repo *DummyDynamodbRepo) Insert(ctx context.Context, dummy *domain.Dummy) 
 	}
 	item, err := ToDummyDBItem(dummy)
 	if err != nil {
-		return nil, fmt.Errorf("failed build db item. %w", err)
+		return nil, errors.Wrap(err, "failed build db item")
 	}
 	_, err = repo.client.PutItem(&dynamodb.PutItemInput{
 		TableName: aws.String(repo.tableName),
 		Item:      item,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("put db item error. table: %s, item: %s. %w", repo.tableName, logger.Pretty(dummy), err)
+		rootErr := errors.New(err.Error())
+		return nil, errors.Wrapf(rootErr, "put db item error. table: %s, item: %s", repo.tableName, logger.Pretty(dummy))
 	}
 	logger.Debug("put to db. item: %s", logger.Pretty(dummy))
 	return dummy, nil
@@ -98,7 +101,8 @@ func (repo *DummyDynamodbRepo) DeleteByID(ctx context.Context, id string) (*doma
 		Key:       ToDummyDBKey(domain.ToKeyDummy(id)),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("delete db item error. table: %s, id: %s. %w", repo.tableName, id, err)
+		rootErr := errors.New(err.Error())
+		return nil, errors.Wrapf(rootErr, "delete db item error. table: %s, id: %s", repo.tableName, id)
 	}
 	logger.Debug("delete from db. id: %s", id)
 	return &domain.Dummy{
@@ -128,7 +132,8 @@ func ToDummyDBItem(dummy *domain.Dummy) (map[string]*dynamodb.AttributeValue, er
 	}
 	item, err := dynamodbattribute.MarshalMap(dummy)
 	if err != nil {
-		return nil, fmt.Errorf("marshal dummy entity error. %w", err)
+		rootErr := errors.New(err.Error())
+		return nil, errors.Wrap(rootErr, "marshal dummy entity error")
 	}
 	item = addDummyKeys(item, dummy)
 	return item, nil
@@ -146,7 +151,8 @@ func ToDummyEntity(item map[string]*dynamodb.AttributeValue) (*domain.Dummy, err
 	dummy := &domain.Dummy{}
 	err := dynamodbattribute.UnmarshalMap(item, dummy)
 	if err != nil {
-		return nil, fmt.Errorf("unmarshal dummy item error. %w", err)
+		rootErr := errors.New(err.Error())
+		return nil, errors.Wrap(rootErr, "unmarshal dummy item error")
 	}
 	return dummy, nil
 }

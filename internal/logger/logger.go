@@ -10,12 +10,17 @@ import (
 	"strings"
 
 	"github.com/hashicorp/logutils"
+	"github.com/pkg/errors"
 )
 
 const (
 	unknownFileName       string = "unknow file"
 	logFilenameSkipFrames int    = 2
 )
+
+type stackTracer interface {
+	StackTrace() errors.StackTrace
+}
 
 // Newline
 // helps control newline character
@@ -88,7 +93,24 @@ func Warn(format string, v ...any) {
 func Error(format string, err error, v ...any) {
 	f := getLogFile()
 	s := fmt.Sprintf(format, v...)
-	t := fmt.Sprintf("error trace: %+v", err)
+	var t string
+	var tracer stackTracer
+	rootErr := errors.Cause(err)
+	ok := errors.As(rootErr, &tracer)
+	if !ok {
+		t = fmt.Sprintf("cause: %+v", err)
+	} else {
+		traces := []string{}
+		traces = append(traces,
+			fmt.Sprintf("cause: %s", err.Error()),
+			"trace: [",
+		)
+		for _, st := range tracer.StackTrace() {
+			traces = append(traces, fmt.Sprintf("  - %+v", st))
+		}
+		traces = append(traces, "]")
+		t = strings.Join(traces, "\n")
+	}
 	l := newline(s + "\n" + t)
 	l = fmt.Sprintf("%s %s %s", "[ERROR]", f, l)
 	log.Println(l)

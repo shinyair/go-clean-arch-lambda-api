@@ -1,11 +1,10 @@
 package app
 
 import (
-	"fmt"
-
 	aws "github.com/aws/aws-sdk-go/aws"
 	awssession "github.com/aws/aws-sdk-go/aws/session"
 	awsdynamodb "github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/pkg/errors"
 	"local.com/go-clean-lambda/internal/controller"
 	bizcontroller "local.com/go-clean-lambda/internal/controller/biz"
 	"local.com/go-clean-lambda/internal/logger"
@@ -21,7 +20,7 @@ func InitDummyControllers() ([]controller.MuxController, error) {
 	// init configs
 	appConfig, err := NewAppConfig()
 	if err != nil {
-		return nil, fmt.Errorf("failed to init app config. %s. %w", logger.Pretty(appConfig), err)
+		return nil, errors.Errorf("failed to init app config. %s", err.Error())
 	}
 	// init logger
 	logger.SetLogLevels(appConfig.LogCfg.Levels, appConfig.LogCfg.MinLevel, appConfig.LogCfg.CrNewline)

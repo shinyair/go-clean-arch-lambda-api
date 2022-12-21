@@ -1,11 +1,11 @@
 package bizcontroller
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
 	"local.com/go-clean-lambda/internal/controller"
 	"local.com/go-clean-lambda/internal/logger"
 	"local.com/go-clean-lambda/internal/usecase"
@@ -84,12 +84,12 @@ func (c *DummyController) handleGet(w http.ResponseWriter, r *http.Request, id s
 	logger.Debug("get by id: %s", id)
 	bo, err := c.usecase.Get(r.Context(), id)
 	if err != nil {
-		return fmt.Errorf("get item error. %w", err)
+		return errors.Wrap(err, "get item error")
 	}
 	s := fmt.Sprintf("handle get. id: %s, got bo: %s", id, logger.Pretty(bo))
 	logger.Info(s)
 	_, err = w.Write([]byte(s))
-	return fmt.Errorf("write response failed. %w", err)
+	return errors.Wrap(errors.New(err.Error()), "write response failed")
 }
 
 // handlePost
@@ -109,12 +109,12 @@ func (c *DummyController) handlePost(w http.ResponseWriter, r *http.Request) err
 		Attr: attr,
 	})
 	if err != nil {
-		return fmt.Errorf("add item error. %w", err)
+		return errors.Wrap(err, "add item error")
 	}
 	s := logger.Pretty(bo)
 	logger.Debug("handle add. bo: %s", s)
 	_, err = w.Write([]byte(s))
-	return fmt.Errorf("write response failed. %w", err)
+	return errors.Wrap(errors.New(err.Error()), "write response failed")
 }
 
 // handleDelete
@@ -128,13 +128,13 @@ func (c *DummyController) handleDelete(w http.ResponseWriter, r *http.Request, i
 	logger.Debug("delete by id: %s", id)
 	bo, err := c.usecase.Remove(r.Context(), id)
 	if err != nil {
-		return fmt.Errorf("remove item error. %w", err)
+		return errors.Wrap(err, "remove item error")
 	}
 	if bo == nil {
-		return fmt.Errorf("%w. id: %s", ErrObjectNotFound, id)
+		return errors.Wrapf(ErrObjectNotFound, "id: %s", id)
 	}
 	s := fmt.Sprintf("handle delete. id: %s", id)
 	logger.Debug(s)
 	_, err = w.Write([]byte(s))
-	return fmt.Errorf("write response failed. %w", err)
+	return errors.Wrap(errors.New(err.Error()), "write response failed")
 }

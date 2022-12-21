@@ -1,7 +1,8 @@
 package main
 
 import (
-	"io/ioutil"
+	_ "embed"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -12,13 +13,12 @@ import (
 	"local.com/go-clean-lambda/internal/logger"
 )
 
+//go:embed .\..\..\configs\env.yml
+var yf []byte
+
 func setLocalEnv() {
-	yf, err := ioutil.ReadFile("configs/env.yml")
-	if err != nil {
-		log.Fatalf("faild to get yaml config file. %v ", err)
-	}
 	envCfgMap := make(map[string]map[string]string)
-	err = yaml.Unmarshal(yf, envCfgMap)
+	err := yaml.Unmarshal(yf, envCfgMap)
 	if err != nil {
 		log.Fatalf("failed to parse yaml config file: %v", err)
 	}
@@ -32,14 +32,15 @@ func setLocalEnv() {
 
 func server() {
 	setLocalEnv()
+	port := 8080
 	controllers, err := app.InitDummyControllers()
 	if err != nil {
 		logger.Error("execution end. failed to init lambda.", err)
 		return
 	}
 	r := controller.NewRouter(controllers)
-	logger.Info("local(with mux) initialization done")
-	log.Fatal(http.ListenAndServe(":8000", r))
+	logger.Info("local(with mux) initialization done on port: %d", port)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), r))
 }
 
 func main() {
