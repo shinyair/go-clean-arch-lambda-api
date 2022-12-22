@@ -42,10 +42,9 @@ do
         echo "positional arguments:"
         echo "  -a      AWS Account"
         echo "  -u      IAM username"
+        echo "  -p      AWS Profile used in issuing the temp token"
         echo "  -c      Multi-factor authentication (MFA) code"
-        echo "positional arguments:"
         echo "  -h      Show this help message and exit"
-        echo "  -p      AWS Profile used in cmd"
         exit
         ;;
     esac
@@ -53,19 +52,26 @@ done
 
 if [ -z "$ACCOUNT" ]; then
     echo "Account is required"
-    exit
+    exit 1
 fi
 if [ -z "$USERNAME" ]; then
     echo "Username is required"
-    exit
+    exit 1
+fi
+if [ -z "$PROFILE" ]; then
+    echo "Profile is required"
+    exit 1
 fi
 if [ -z "$CODE" ]; then
     echo "MFA code is required"
-    exit
+    exit 1
 fi
 
 AWS_ARN_MFA="arn:aws:iam::${ACCOUNT}:mfa/${USERNAME}"
-SESSION_PROFILE="${PROFILE}_default"
+SESSION_PROFILE="default"
+if [[ ! -z "$PROFILE" ]]; then
+    SESSION_PROFILE="${PROFILE}_default"
+fi
 
 AWS_STS_RESULT=$(aws sts get-session-token --duration-seconds 129600 \
   --serial-number $AWS_ARN_MFA \
@@ -73,7 +79,6 @@ AWS_STS_RESULT=$(aws sts get-session-token --duration-seconds 129600 \
   --token-code $CODE \
   --output text)
 read AWS_RETURN_TYPE AWS_ACCESS_KEY_ID AWS_EXPIRATION AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN <<< $AWS_STS_RESULT
-
 if [ -z "$AWS_ACCESS_KEY_ID" ]; then
   exit 1
 fi

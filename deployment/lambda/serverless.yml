@@ -4,14 +4,33 @@ frameworkVersion: ">=3.0"
 
 plugins:
   - serverless-deployment-bucket
+  - ./../plugins/parse-var-plugin.js
+  - ./../plugins/go-build-plugin.js
 
 custom:
   stage: ${opt:stage,'dev'}
-  external: ${file(./output/configs/env.yml):${self:custom.stage}}
+  external: ${file(./configs/env.yml):${self:custom.stage}}
   region: ${self:custom.external.REGION}
   appCode: ${self:custom.external.APPCODE}
   variant: ${self:custom.external.VARIANT, ''}
-  jwtKeys: ${file(./output/configs/jwt.yml)}
+  jwtKeys: ${file(./configs/jwt.yml)}
+  parseVar:
+    - name: external
+      source: custom
+      skipFields: [ACCOUNT_ID]
+      addToEnv: true
+    - name: deploymentBucket
+      source: provider
+      skipFields: []
+      addToEnv: false
+    - name: JwtPrivateKeySSM
+      source: resource
+      skipFields: [Type, Value, Description]
+      addToEnv: false
+    - name: JwtPublicKeySSM
+      source: resource
+      skipFields: [Type, Value, Description]
+      addToEnv: false
 
 provider:
   name: aws
@@ -19,7 +38,7 @@ provider:
   runtime: go1.x
   region: ${self:custom.region}
   versionFunctions: false
-  deploymentBucket: 
+  deploymentBucket:
     name: ${self:custom.external.AWS_DEPLOYMENT_BUCKET}
   stackName: ${self:custom.stage}-${self:custom.variant}-${self:service}
   iam:
@@ -29,7 +48,6 @@ provider:
     cors: false
   timeout: 30
   memorySize: 512
-  environment: ${file(./output/configs/env.yml):${self:custom.stage}}
 
 package:
   individually: true
@@ -37,7 +55,7 @@ package:
 functions:
   api:
     name: ${self:custom.stage}-${self:custom.variant}-${self:service}-api
-    handler: main
+    handler: ./../../cmd/api
     package:
       artifact: api.zip
     events:
@@ -50,7 +68,7 @@ functions:
       appcode: ${self:custom.appCode}
   auth:
     name: ${self:custom.stage}-${self:custom.variant}-${self:service}-auth
-    handler: main
+    handler: ./../../cmd/auth
     package:
       artifact: auth.zip
     events:
@@ -63,7 +81,7 @@ functions:
       appcode: ${self:custom.appCode}
   dummy:
     name: ${self:custom.stage}-${self:custom.variant}-${self:service}-dummy
-    handler: main
+    handler: ./../../cmd/dummy
     package:
       artifact: dummy.zip
     events:
@@ -79,7 +97,7 @@ functions:
       appcode: ${self:custom.appCode}
   ping:
     name: ${self:custom.stage}-${self:custom.variant}-${self:service}-ping
-    handler: main
+    handler: ./../../cmd/ping
     package:
       artifact: ping.zip
     events:

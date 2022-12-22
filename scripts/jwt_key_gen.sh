@@ -1,6 +1,12 @@
 #!/bin/sh
 
-FOLDER=$PWD/deployment/output/configs
+CFGPATH=$1
+if [ -z "$CFGPATH" ]; then
+    echo "config folder path is required"
+    exit
+fi
+
+FOLDER=$PWD/$CFGPATH
 RSA=$FOLDER/jwt.rsa.pem
 RSAPUB=$FOLDER/jwt.rsa.pem.pub
 RSAPUBPEM=$FOLDER/jwt.rsa.pub.pem

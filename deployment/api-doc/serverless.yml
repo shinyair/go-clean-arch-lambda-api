@@ -7,7 +7,7 @@ plugins:
 
 custom:
   stage: ${opt:stage,'dev'}
-  external: ${file(./../output/configs/env.yml):${self:custom.stage}}
+  external: ${file(./configs/env.yml):${self:custom.stage}}
   appCode: ${self:custom.external.APPCODE}
   variant: ${self:custom.external.VARIANT, ''}
   s3upload:

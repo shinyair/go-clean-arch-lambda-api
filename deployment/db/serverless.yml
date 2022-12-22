@@ -4,19 +4,29 @@ frameworkVersion: ">=3.0"
 
 plugins:
   - serverless-deployment-bucket
+  - ./../plugins/parse-var-plugin.js
 
 custom:
   stage: ${opt:stage,'dev'}
-  external: ${file(./../output/configs/env.yml):${self:custom.stage}}
+  external: ${file(./configs/env.yml):${self:custom.stage}}
   region: ${self:custom.external.REGION}
   appCode: ${self:custom.external.APPCODE}
   variant: ${self:custom.external.VARIANT, ''}
+  parseVar:
+    - name: deploymentBucket
+      source: provider
+      skipFields: []
+      addToEnv: false
+    - name: DummyTable
+      source: resource
+      skipFields: [Type, DeletionPolicy, Tags, AttributeDefinitions, KeySchema, BillingMode]
+      addToEnv: false
 
 provider:
   name: aws
   stage: ${self:custom.stage}${self:custom.variant}
   region: ${self:custom.region}
-  deploymentBucket: 
+  deploymentBucket:
     name: ${self:custom.external.AWS_DEPLOYMENT_BUCKET}
   stackName: ${self:custom.stage}-${self:custom.variant}-${self:service}
 
@@ -26,7 +36,7 @@ resources:
       Type: AWS::DynamoDB::Table
       DeletionPolicy: Retain
       Properties:
-        TableName: ${self:custom.external.DUMMY_TABLE_NAME} # {stage}.{appcode}.dummy
+        TableName: ${self:custom.external.DUMMY_TABLE_NAME}
         Tags:
           - Key: appcode
             Value: ${self:custom.appCode}

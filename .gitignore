@@ -4,6 +4,7 @@ node_modules/
 deployment/**
 !deployment/db/
 !deployment/api-doc/
+!deployment/lambda/
 !deployment/**/serverless.yml
 
 !deployment/plugins/
