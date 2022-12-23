@@ -75,7 +75,8 @@ project
 |         ├── jwt.rsa.pub # public key for authentication jwt
 |         └── main.go # help run & debug local
 ├── configs 
-|    └── env.yaml # env variable config file for dev/eva/.. stage
+|    ├── stage.yml # control the stage to deploy
+|    └── env.yml # env variable config file for dev/eva/.. stage
 ├── deployment 
 |    ├── api-doc
 |    |    ├── configs # necessary configs for serverless.yml
@@ -120,6 +121,7 @@ project
 ├── test # test configs
 ├── .gitignore
 ├── .golangci.yml # lint configurations
+├── buildspec.yml # buildspec for aws codebuild
 ├── go.mod
 ├── go.sum
 ├── package.json
@@ -277,15 +279,51 @@ Find url of your API Gateway, and try to invoke:
 Open Lambda service on AWS Console, and find the deployed Lambda function by region and name `{stage}-{variant}-go-clean-lambda-dummy` (which are set in serverless.yml).
 Switch to `Monitor` tab and open `Cloudwatch` to check the runtime log.
 
-### Invoked AWS services
+## CI/CD
+CI/CD is a method to manage lint, test, build, package and deploy automatically from committing code to releasing code to target environments.
+
+[What is CI/CD?](https://about.gitlab.com/topics/ci-cd/)
+
+[The 7 essential stages of a CI/CD pipeline](https://www.tutorialworks.com/cicd-pipeline-stages/)
+
+### Integration with GitHub (CI)
+TODO:
+
+### Integration with AWS CodePipeline (CD)
+Simple CI/CD workflow
+- Commit Codes
+- GitHub changes 
+- AWS CodePipeline 
+  - Fetch source from GitHub 
+  - Save source to AWS S3
+  - Invoke AWS CodeBuild
+    - Build and deploy according to `buildspec.yml` in one build
+    - Output built package
+  - Save built artifact to AWS S3
+
+It is possible to separate build and deploy stage. In this case, 
+- run `buildspec.yml` to generate `Cloudformation Templates` and packaged artifacts, then upload packaged artifacts to AWS S3 in build stage by AWS CodeBuild. (Make sure the package artifacts are uploaded to the deployment bucket)
+- fetch packaged artifacts (including generated `Cloudformation Templates`) from AWS S3 and create or update target `CloudFormation` in deploy stage by `CloudFormation` action provider.
+
+Check more detail in [Getting started with CodePipeline](https://docs.aws.amazon.com/codepipeline/latest/userguide/getting-started-codepipeline.html)
+
+### Related Scripts
+- `scripts` in `package.json` to run simple cmds, such as remove and copy files
+- shell scripts in `scripts` folder to run complicated cmds, such as composed cicd scripts
+- serverless custom plugins in `deployment/plugins` folder to handle work related to serverless resources
+- `buildspec.yml` for AWS CodeBuild to run
+
+## Invoked AWS services
 - API Gateway, trigger of Lambda
 - Lambda, function to run the go program
 - DynamoDB, db
 - Cloudwatch, logs
-- AWS Systems Manager Parameter Store, store keys
-- IAM, policies and roles to run Lambda
+- Systems Manager Parameter Store, store keys
+- IAM, policies and roles to use resources
 - S3, deployment bucket(storage) and swagger-ui bucket(static web server)
-- CloudFormation, deployment stack, which manages deployed resources of each serverless service. Here are 2 stacks in the project, one for db, one for lambda-api.
+- CloudFormation, deployment stack, which manages deployed resources of each serverless service. Here are 2 stacks in the project, one for db, one for lambda-api
+- CodePipeline to integrate with GitHub to trigger build and deployment automatically (CICD)
+- CodeBuild, invoked by CodePipeline, to build from source code and deploy resources (CICD)
 
 ## Reference
 ### Standard Go Project Layout

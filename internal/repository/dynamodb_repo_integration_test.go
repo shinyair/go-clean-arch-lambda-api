@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/pkg/errors"
@@ -52,6 +53,7 @@ func setup() {
 	fmt.Println("dynamodb client inited")
 	err = createDdbTables(ddb.client)
 	if err != nil {
+		fmt.Printf("failed to create dynamodb tables. caused by: %v \n", err)
 		err2 := shutDdbLocal()
 		if err2 != nil {
 			fmt.Printf("failed to shutdown dynamodb local. caused by: %v \n", err2)
@@ -109,8 +111,9 @@ func shutDdbLocal() error {
 func buildDdbClient() *dynamodb.DynamoDB {
 	awsopt := session.Options{
 		Config: aws.Config{
-			Region:   aws.String("ap-southeast-1"),
-			Endpoint: aws.String("http://localhost:8000"),
+			Region:      aws.String("local"),
+			Endpoint:    aws.String("http://localhost:8000"),
+			Credentials: credentials.NewStaticCredentials("dummy", "dummy", "dummy"),
 		},
 	}
 	awssess := session.Must(session.NewSessionWithOptions(awsopt))
@@ -118,7 +121,17 @@ func buildDdbClient() *dynamodb.DynamoDB {
 }
 
 func createDdbTables(client *dynamodb.DynamoDB) error {
-	_, err := client.CreateTable(buildCreateDummyTableInput())
+	retry := 0
+	maxRetry := 10
+	var err error
+	for err != nil && retry <= maxRetry {
+		_, err = client.DescribeEndpoints(&dynamodb.DescribeEndpointsInput{})
+		retry++
+	}
+	if err != nil {
+		return err
+	}
+	_, err = client.CreateTable(buildCreateDummyTableInput())
 	if err != nil {
 		return err
 	}

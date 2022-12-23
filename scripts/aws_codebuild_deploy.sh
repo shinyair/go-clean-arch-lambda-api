@@ -22,6 +22,7 @@
 #  - build stage
 #    - build provider: codebuild
 #    - project name: select codebuild project in 2nd step
+#    - add environment variable: stage: dev
 #  - deploy stage: skip (build & deploy in codebuild directly)
 
 # clear deployment of service

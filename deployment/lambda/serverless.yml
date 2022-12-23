@@ -8,7 +8,7 @@ plugins:
   - ./../plugins/go-build-plugin.js
 
 custom:
-  stage: ${opt:stage,'dev'}
+  stage: ${file(./configs/stage.yml):stage}
   external: ${file(./configs/env.yml):${self:custom.stage}}
   region: ${self:custom.external.REGION}
   appCode: ${self:custom.external.APPCODE}
