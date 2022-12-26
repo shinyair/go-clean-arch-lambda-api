@@ -63,6 +63,8 @@ And here is a blog compares those 2 tools,
 Consider implementing `golang-standard` and the `clean architecture` in lambda based progoram (which always serves functions), the project is organized as:
 ```
 project 
+├── .github/workflow
+|    └── *.yml # github ci workflows
 ├── api 
 |    ├── openapi/v2/swagger.json # openapi v2 spec
 |    └── swagger-ui # swagger-ui static website
@@ -287,7 +289,11 @@ CI/CD is a method to manage lint, test, build, package and deploy automatically 
 [The 7 essential stages of a CI/CD pipeline](https://www.tutorialworks.com/cicd-pipeline-stages/)
 
 ### Integration with GitHub (CI)
-TODO:
+Provide yaml configurations to run some cmds for some github events - such as pull request - happen.
+Generally speaking, run lint and test before merging a pull request(pre-merge); build and publish artifact after merging a pull request (post-merge).
+
+- [GitHub Actions](https://docs.github.com/en/actions)
+- [GitHub Action Example](https://docs.github.com/en/actions/examples/using-scripts-to-test-your-code-on-a-runner)
 
 ### Integration with AWS CodePipeline (CD)
 Simple CI/CD workflow
@@ -374,6 +380,9 @@ Use a build tag to seperate integration tests from unit tests for different kind
 - [serverless-deployment-bucket](https://github.com/mikesouza/serverless-deployment-bucket)
 - [serverless-go-build](https://github.com/sean9keenan/serverless-go-build/blob/master/index.js)
 
+### GitHub Actions
+- [golangci-lint GitHub Actions](https://github.com/golangci/golangci-lint-action)
+- [Trigger workflow only on pull request MERGE](https://github.com/orgs/community/discussions/26724)
 
 ## Appendix
 ### Create new projects 
