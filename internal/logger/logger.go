@@ -18,6 +18,10 @@ const (
 	logFilenameSkipFrames int    = 2
 )
 
+type causer interface {
+	Cause() error
+}
+
 type stackTracer interface {
 	StackTrace() errors.StackTrace
 }
@@ -94,10 +98,9 @@ func Error(format string, err error, v ...any) {
 	f := getLogFile()
 	s := fmt.Sprintf(format, v...)
 	var t string
-	var tracer stackTracer
-	rootErr := errors.Cause(err)
-	ok := errors.As(rootErr, &tracer)
-	if !ok {
+	if err == nil {
+		t = "{nil error}"
+	} else if tracer := getTracableRoot(err); tracer == nil {
 		t = fmt.Sprintf("cause: %+v", err)
 	} else {
 		traces := []string{}
@@ -129,6 +132,38 @@ func Pretty(v interface{}) string {
 		return "pretty_error"
 	}
 	return string(vjson)
+}
+
+// getTracableRoot
+//
+//	@param err
+//	@return stackTracer
+//
+//nolint:ireturn
+func getTracableRoot(err error) stackTracer {
+	if err == nil {
+		return nil
+	}
+	var tracer stackTracer
+	prev := err
+	for err != nil {
+		//nolint:errorlint
+		cause, ok := err.(causer)
+		if !ok {
+			break
+		}
+		//nolint:errorlint
+		_, ok2 := err.(stackTracer)
+		if ok2 {
+			prev = err
+		}
+		err = cause.Cause()
+	}
+	ok := errors.As(prev, &tracer)
+	if ok {
+		return tracer
+	}
+	return nil
 }
 
 // getLogFile

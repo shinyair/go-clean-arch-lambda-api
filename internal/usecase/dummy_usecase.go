@@ -2,13 +2,14 @@ package usecase
 
 import (
 	"context"
+	nativeerr "errors"
 
 	"github.com/pkg/errors"
 	"local.com/go-clean-lambda/internal/domain"
 	"local.com/go-clean-lambda/internal/logger"
 )
 
-var ErrInvalidInput error = errors.New("invalid input")
+var ErrInvalidInput error = nativeerr.New("invalid input")
 
 // DummyBo.
 type DummyBo struct {

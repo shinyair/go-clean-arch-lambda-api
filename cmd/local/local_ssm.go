@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	nativeerr "errors"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/request"
@@ -10,7 +11,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-var ErrNoValueFound error = errors.New("no value found")
+var ErrNoValueFound error = nativeerr.New("no value found")
 
 // LocalSSM
 // implements ssmiface.SSMAPI.
@@ -34,7 +35,7 @@ func (s *LocalSSM) GetParameterWithContext(
 ) (*ssm.GetParameterOutput, error) {
 	val, ok := s.store[*input.Name]
 	if !ok {
-		return nil, ErrNoValueFound
+		return nil, errors.WithStack(ErrNoValueFound)
 	}
 	return &ssm.GetParameterOutput{
 		Parameter: &ssm.Parameter{

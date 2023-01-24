@@ -2,8 +2,7 @@ package authorization
 
 import (
 	"context"
-
-	"github.com/pkg/errors"
+	"errors"
 )
 
 var ErrInvalidUserID error = errors.New("invalid user id")

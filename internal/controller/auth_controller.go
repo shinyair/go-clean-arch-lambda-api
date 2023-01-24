@@ -1,6 +1,7 @@
 package controller
 
 import (
+	nativeerr "errors"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -18,7 +19,7 @@ const (
 	AuthIndexAppPing                // index: 3
 )
 
-var ErrInvalidUserIDOrPassword error = errors.New("invalid user id or password")
+var ErrInvalidUserIDOrPassword error = nativeerr.New("invalid user id or password")
 
 // AuthController
 // works as extends MuxControllerImpl.
@@ -95,8 +96,9 @@ func (c *AuthController) login(w http.ResponseWriter, r *http.Request) error {
 		return errors.Wrapf(err, "failed to verify password. user_id: %s, password: %s", userID, password)
 	}
 	if !verifed {
-		logger.Info("%s. user_id: %s, password: %s", ErrInvalidUserIDOrPassword.Error(), userID, password)
-		return c.WriteResponse(w, ErrInvalidUserIDOrPassword.Error())
+		errMsg := ErrInvalidUserIDOrPassword.Error()
+		logger.Info("%s. user_id: %s, password: %s", errMsg, userID, password)
+		return c.WriteResponse(w, errMsg)
 	}
 	indices, err := c.roleClient.ListGrantedIndices(ctx, userID)
 	if err != nil {

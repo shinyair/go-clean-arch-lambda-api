@@ -2,6 +2,7 @@ package usecase_test
 
 import (
 	"context"
+	nativeerr "errors"
 	"testing"
 
 	"github.com/google/uuid"
@@ -16,7 +17,7 @@ const (
 	invalidDummyID string = "invalid_dummy_id"
 )
 
-var errBadRepositoryAction error = errors.New("mocked repo error")
+var errBadRepositoryAction error = nativeerr.New("mocked repo error")
 
 func TestTraceableErrorLog(t *testing.T) {
 	items := []*domain.Dummy{}

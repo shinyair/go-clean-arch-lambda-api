@@ -39,7 +39,7 @@ func NewAuthJwtDummyClient(
 
 func (c *AuthJwtDuummyClient) Issue(ctx context.Context, claim *AuthJwtClaim) (string, error) {
 	if claim == nil {
-		return "", ErrInvalidClaim
+		return "", errors.WithStack(ErrInvalidClaim)
 	}
 	privateKey, err := c.getSSMParam(ctx, c.privateKeyParam)
 	if err != nil {
@@ -64,24 +64,24 @@ func (c *AuthJwtDuummyClient) Issue(ctx context.Context, claim *AuthJwtClaim) (s
 
 func (c *AuthJwtDuummyClient) Verify(ctx context.Context, tokenStr string) (*AuthJwtClaim, error) {
 	if len(tokenStr) == 0 {
-		return nil, ErrInvalidJwt
+		return nil, errors.WithStack(ErrInvalidJwt)
 	}
 	blocked, err := c.isBlocked(tokenStr)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to check block status")
 	}
 	if blocked {
-		return nil, ErrBlockedClaim
+		return nil, errors.WithStack(ErrBlockedClaim)
 	}
 	claim, err := c.parseJwt(ctx, tokenStr)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to prase jwt as claim")
 	}
 	if claim == nil || claim.User == nil {
-		return nil, ErrInvalidClaim
+		return nil, errors.WithStack(ErrInvalidClaim)
 	}
 	if claim.ExpiresAt <= time.Now().UnixNano() {
-		return nil, ErrExpiredClaim
+		return nil, errors.WithStack(ErrExpiredClaim)
 	}
 	return claim, nil
 }
@@ -114,7 +114,7 @@ func (c *AuthJwtDuummyClient) Block(ctx context.Context, tokenStr string) error 
 //	@return error
 func (c *AuthJwtDuummyClient) isBlocked(tokenStr string) (bool, error) {
 	if tokenStr == "" {
-		return false, ErrInvalidJwt
+		return false, errors.WithStack(ErrInvalidJwt)
 	}
 	expireAt, ok := c.blockMap[tokenStr]
 	if !ok {
@@ -153,7 +153,7 @@ func (c *AuthJwtDuummyClient) parseJwt(ctx context.Context, tokenStr string) (*A
 	}
 	claim, ok := token.Claims.(*AuthJwtClaim)
 	if !ok {
-		return nil, ErrInvalidClaim
+		return nil, errors.WithStack(ErrInvalidClaim)
 	}
 	return claim, nil
 }

@@ -1,6 +1,7 @@
 package controller
 
 import (
+	nativeerr "errors"
 	"fmt"
 	"net/http"
 
@@ -10,7 +11,7 @@ import (
 	"local.com/go-clean-lambda/internal/usecase"
 )
 
-var ErrObjectNotFound error = errors.New("object not found")
+var ErrObjectNotFound error = nativeerr.New("object not found")
 
 // DummyController
 // works as extends MuxControllerImpl.

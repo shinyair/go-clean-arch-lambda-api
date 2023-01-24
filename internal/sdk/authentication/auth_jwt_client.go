@@ -2,9 +2,8 @@ package authentication
 
 import (
 	"context"
+	"errors"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 type AuthContextKey string

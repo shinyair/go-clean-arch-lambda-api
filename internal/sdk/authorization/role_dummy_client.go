@@ -51,7 +51,7 @@ func (c *RoleDummyClient) GetPermissionBit(ctx context.Context, permissions []in
 
 func (c *RoleDummyClient) ListGrantedIndices(ctx context.Context, userID string) ([]int, error) {
 	if userID == "" {
-		return nil, ErrInvalidUserID
+		return nil, errors.WithStack(ErrInvalidUserID)
 	}
 	gi, ok := c.imap[userID]
 	if !ok {

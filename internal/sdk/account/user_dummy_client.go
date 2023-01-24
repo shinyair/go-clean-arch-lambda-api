@@ -4,6 +4,8 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
+
+	"github.com/pkg/errors"
 )
 
 const (
@@ -48,17 +50,17 @@ func NewUserDummmyClient() *UserDummyClient {
 
 func (c *UserDummyClient) GetUser(ctx context.Context, userID string) (*UserDto, error) {
 	if userID == "" {
-		return nil, ErrInvalidUserID
+		return nil, errors.WithStack(ErrInvalidUserID)
 	}
 	return c.umap[userID], nil
 }
 
 func (c *UserDummyClient) RegisterUser(ctx context.Context, user *UserDto, password string) error {
 	if user == nil || user.UserID == "" || user.Name == "" {
-		return ErrInvalidUserInfo
+		return errors.WithStack(ErrInvalidUserInfo)
 	}
 	if password == "" {
-		return ErrInvalidPassword
+		return errors.WithStack(ErrInvalidPassword)
 	}
 	c.umap[user.UserID] = user
 	c.pmap[user.UserID] = encodePasssword(password)
@@ -67,7 +69,7 @@ func (c *UserDummyClient) RegisterUser(ctx context.Context, user *UserDto, passw
 
 func (c *UserDummyClient) VerifyPassword(ctx context.Context, userID string, password string) (bool, error) {
 	if userID == "" {
-		return false, ErrInvalidUserID
+		return false, errors.WithStack(ErrInvalidUserID)
 	}
 	p1 := c.pmap[userID]
 	p2 := encodePasssword(password)

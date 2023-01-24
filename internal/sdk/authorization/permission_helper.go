@@ -1,6 +1,8 @@
 package authorization
 
 import (
+	nativeerr "errors"
+
 	"github.com/pkg/errors"
 )
 
@@ -11,7 +13,7 @@ const (
 	bitLength int = 8
 )
 
-var ErrExceedMaxPermissionBitLenght error = errors.New("exceed permission bit length")
+var ErrExceedMaxPermissionBitLenght error = nativeerr.New("exceed permission bit length")
 
 // HasAuthority
 //
@@ -48,7 +50,7 @@ func GenerateGrantedBit(grantedIndices []int) (uint64, error) {
 	var result uint64 = 0b0
 	for _, i := range grantedIndices {
 		if i >= bitLength {
-			return NonePermissionBit, ErrExceedMaxPermissionBitLenght
+			return NonePermissionBit, errors.WithStack(ErrExceedMaxPermissionBitLenght)
 		}
 		var sub uint64 = 0b1
 		sub <<= (bitLength - i)

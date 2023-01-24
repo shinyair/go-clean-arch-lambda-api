@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	nativeerr "errors"
 	"net/http"
 	"strings"
 
@@ -13,10 +14,10 @@ import (
 )
 
 var (
-	ErrInvalidAuthenticationHeader error = errors.New("invalid authorization header")
-	ErrUnauthenticated             error = errors.New("unauthenticated")
-	ErrForbidden                   error = errors.New("forbidden")
-	ErrUserContextNotFound         error = errors.New("user context not found")
+	ErrInvalidAuthenticationHeader error = nativeerr.New("invalid authorization header")
+	ErrUnauthenticated             error = nativeerr.New("unauthenticated")
+	ErrForbidden                   error = nativeerr.New("forbidden")
+	ErrUserContextNotFound         error = nativeerr.New("user context not found")
 )
 
 // GetLogMiddleware
@@ -44,8 +45,9 @@ func GetLoginAccessMiddleware(authClient authentication.AuthJwtClient) mux.Middl
 			// verify
 			jwtHeader := r.Header.Get(authentication.JwtHeader)
 			if !strings.HasPrefix(jwtHeader, authentication.JwtHeaderPrefix) {
-				logger.Error("failed to check auth. header: %s", ErrInvalidAuthenticationHeader, jwtHeader)
-				http.Error(w, ErrInvalidAuthenticationHeader.Error(), http.StatusUnauthorized)
+				err := errors.WithStack(ErrInvalidAuthenticationHeader)
+				logger.Error("failed to check auth. header: %s", err, jwtHeader)
+				http.Error(w, err.Error(), http.StatusUnauthorized)
 				return
 			}
 			claim, err := authClient.Verify(r.Context(), jwtHeader[len(authentication.JwtHeaderPrefix):])
@@ -85,15 +87,16 @@ func GetRoleAccessMiddleware(allowdPermissionBit []uint64) mux.MiddlewareFunc {
 			// get user context
 			cval := r.Context().Value(authentication.UserContextKey)
 			if cval == nil {
+				err := errors.WithStack(ErrUserContextNotFound)
 				logger.Error("failed to check role. path: %s, method: %s, middleware: role",
-					ErrUserContextNotFound,
-					r.URL.Path, r.Method)
+					err, r.URL.Path, r.Method)
 				http.Error(w, "server error", http.StatusInternalServerError)
 				return
 			}
 			userContext, ok := cval.(authentication.UserContext)
 			if !ok {
-				logger.Error("failed to convert user context value", ErrUserContextNotFound)
+				err := errors.WithStack(ErrUserContextNotFound)
+				logger.Error("failed to convert user context value", err)
 				http.Error(w, "server error", http.StatusInternalServerError)
 				return
 			}

@@ -2,8 +2,7 @@ package account
 
 import (
 	"context"
-
-	"github.com/pkg/errors"
+	"errors"
 )
 
 var (
