@@ -138,8 +138,7 @@ func Pretty(v interface{}) string {
 //
 //	@param err
 //	@return stackTracer
-//
-//nolint:ireturn
+//nolint:errorlint,ireturn,nolintlint
 func getTracableRoot(err error) stackTracer {
 	if err == nil {
 		return nil
@@ -147,12 +146,10 @@ func getTracableRoot(err error) stackTracer {
 	var tracer stackTracer
 	prev := err
 	for err != nil {
-		//nolint:errorlint
 		cause, ok := err.(causer)
 		if !ok {
 			break
 		}
-		//nolint:errorlint
 		_, ok2 := err.(stackTracer)
 		if ok2 {
 			prev = err

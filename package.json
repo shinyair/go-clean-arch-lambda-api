@@ -8,7 +8,7 @@
   "scripts": {
     "preinstall": "bash ./scripts/preinstall.sh",
     "test": "go test ./...",
-    "lint": "golangci-lint run",
+    "lint": "gofmt -s -w . && golangci-lint run",
     "swag": "swag init -g swaggo.go -d internal/controller/api -pd -o api/openapi/v2 -ot json",
     "jwt": "bash ./scripts/jwt_key_gen.sh \"deployment/lambda/configs\"",
     "clear:db": "cd deployment/db && rimraf configs && rimraf .serverless",
